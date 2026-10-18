@@ -66,14 +66,3 @@ jobs:
               --notes-file RELEASE_NOTES.md \
               --latest
           fi
-
-      - name: Keep public PDF in the repository
-        run: |
-          cp dist/Greek_to_Greeklish_Renamer_User_Manual_v1.2.1_Dimitris_Laidis.pdf docs/
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/Greek_to_Greeklish_Renamer_User_Manual_v1.2.1_Dimitris_Laidis.pdf
-          if ! git diff --cached --quiet; then
-            git commit -m "docs: publish final v1.2.1 PDF manual"
-            git push origin HEAD:main
-          fi
