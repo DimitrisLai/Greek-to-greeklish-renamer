@@ -24,11 +24,11 @@ def fonts():
     pdfmetrics.registerFont(TTFont("DV",str(base/"DejaVuSans.ttf")))
     pdfmetrics.registerFont(TTFont("DVB",str(base/"DejaVuSans-Bold.ttf")))
 
-def paragraph(c,s,y,size=9.3,width=470,leading=16,bold=False,color=DARK):
+def paragraph(c,s,y,size=9.3,width=470,leading=16,bold=False,color=DARK,x=None):
     p=Paragraph(s,ParagraphStyle("p",fontName="DVB" if bold else "DV",fontSize=size,
                                  leading=leading,textColor=color))
     _,height=p.wrap(width,250)
-    p.drawOn(c,L,y-height)
+    p.drawOn(c,L if x is None else x,y-height)
     return y-height
 
 def base(c,n):
@@ -115,7 +115,7 @@ def build(dest):
     for index,step in enumerate(steps,1):
         c.setFillColor(TEAL);c.setFont("DVB",10)
         c.drawString(L,y-11,f"{index:02}.")
-        y=paragraph(c,step,y+1,width=438)-13
+        y=paragraph(c,step,y+1,width=R-L-45,x=L+42)-13
     y-=15
     box(c,y,99)
     c.setFillColor(TEAL);c.setFont("DVB",10)
@@ -159,7 +159,7 @@ def build(dest):
     y=heading(c,"Undo changes",y)
     y=paragraph(c,"In PowerShell inside the script folder, run:",y+2)-12
     c.setFillColor(NAVY);c.roundRect(L,y-88,R-L,88,9,fill=1,stroke=0)
-    paragraph(c,'<font color="#FFFFFF">py rename_greek_to_greeklish.py</font><br/><font color="#FFFFFF">--path &quot;D:\\Music&quot; --undo &quot;D:\\Music\\greeklish_rename_log_...csv&quot;</font>',y-15,width=442,size=8.2,leading=22)
+    paragraph(c,'<font color="#FFFFFF">py rename_greek_to_greeklish.py `</font><br/><font color="#FFFFFF">--path &quot;D:\\Music&quot; --undo &quot;D:\\Music\\greeklish_rename_log_...csv&quot;</font>',y-15,width=R-L-30,size=8.2,leading=22,x=L+15)
     y-=113
     y=paragraph(c,"Type UNDO to confirm. Missing files and occupied original names are skipped, not overwritten. Undo is best before further moves or manual renames.",y)-20
     y=heading(c,"Useful command-line options",y)
