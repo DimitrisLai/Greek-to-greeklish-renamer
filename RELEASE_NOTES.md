@@ -1,8 +1,10 @@
-# Greek to Greeklish Renamer v1.2.0
+# Greek to Greeklish Renamer v1.2.1
 
 **Created by Dimitris Laidis** · Python 3.10+ · MIT License
 
 A lightweight tool to safely convert Greek filenames and folders to Greeklish.
+
+**Patch update:** Fixed Windows PowerShell/terminal output encoding so Greek filenames display without UnicodeEncodeError.
 
 ### Features
 - Choose any directory at startup, with optional subdirectories.
