@@ -6,12 +6,12 @@
 
 ## Public release
 
-The repository includes a one-time GitHub Actions workflow under `.github/workflows/publish-v1.2.0.yml`. The workflow:
+The repository includes a one-time GitHub Actions workflow under `.github/workflows/publish-v1.2.1.yml`. The workflow:
 
 1. Tests the Python application on Ubuntu.
 2. Generates the four-page public PDF user manual.
 3. Builds the Windows ZIP and source ZIP.
-4. Creates the v1.2.0 GitHub Release or replaces existing release assets.
+4. Creates the v1.2.1 GitHub Release or replaces existing release assets.
 5. Attempts to add the generated manual PDF to `docs/`, and set repository topics.
 
 The release includes three assets: the Windows ZIP, the source ZIP, and the user manual PDF.
