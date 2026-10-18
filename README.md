@@ -2,6 +2,7 @@
 
 **Safely rename Greek filenames and folders to Greeklish.**
 
+**Created by Dimitris Laidis** ([DimitrisLai](https://github.com/DimitrisLai))  
 Python 3.10+ · No third-party packages · Windows launcher included.
 
 ## Features
@@ -47,6 +48,8 @@ Make a backup before bulk changes, especially when playlists or software refer t
 
 ## License and publishing
 
-MIT licensed. See LICENSE and docs/PUBLISHING.md.
+MIT licensed, copyright © 2026 Dimitris Laidis. See LICENSE and docs/PUBLISHING.md.
+
+A public PDF user manual is included in the downloadable release ZIP.
 
 References: [ELOT](https://eshop.elot.gr/en/product/70972), [Greek Passport Authority](https://passport.gov.gr/passports/GrElotConverter/GrElotConverterEn.html).
