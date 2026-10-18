@@ -77,19 +77,3 @@ jobs:
             git commit -m "docs: publish final v1.2.1 PDF manual"
             git push origin HEAD:main
           fi
-
-      - name: Set search-friendly repository topics
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          python - <<'PY'
-          import json
-          topics=["greeklish","greek","transliteration","elot-743","python",
-                  "file-renamer","batch-rename","windows","unicode","cli"]
-          with open("/tmp/topics.json","w",encoding="utf-8") as f:
-              json.dump({"names":topics},f)
-          PY
-          gh api --method PUT "/repos/$GITHUB_REPOSITORY/topics" \
-            -H "Accept: application/vnd.github+json" \
-            --input /tmp/topics.json
