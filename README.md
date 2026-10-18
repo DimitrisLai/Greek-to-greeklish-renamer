@@ -2,7 +2,7 @@
 
 **Safely convert Greek filenames and folder names into Greeklish.**
 
-**Created by [Dimitris Laidis](https://github.com/DimitrisLai)** · Version **1.2.0** · MIT License
+**Created by [Dimitris Laidis](https://github.com/DimitrisLai)** · Version **1.2.1** · MIT License
 
 A lightweight command-line utility for Windows and other platforms running Python 3.10+. No additional Python packages are needed to run the application.
 
@@ -70,7 +70,7 @@ Type \`UNDO\` when prompted. Missing or conflicting paths are skipped rather tha
 py -m unittest discover -s tests -v
 \`\`\`
 
-The automated suite covers transliteration, Greek-only filtering, folder selection, recursive and nonrecursive scanning, filename conflicts, safety and undo. GitHub Actions runs checks on Windows and Linux.
+The automated suite covers Windows Unicode output, transliteration, Greek-only filtering, folder selection, recursive and nonrecursive scanning, filename conflicts, safety and undo. GitHub Actions runs checks on Windows and Linux.
 
 ## Documentation, author and license
 
