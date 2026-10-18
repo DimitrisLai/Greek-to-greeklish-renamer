@@ -2,7 +2,7 @@
 setlocal
 cd /d "%~dp0"
 chcp 65001 >nul
-title Greek to Greeklish Renamer v1.2.0
+title Greek to Greeklish Renamer v1.2.1
 where py >nul 2>&1
 if not errorlevel 1 (
  py -3 "%~dp0rename_greek_to_greeklish.py" %*
