@@ -1,15 +1,25 @@
 # Greek to Greeklish Renamer v1.2.0
 
-- Target directory prompt and optional subfolders.
-- Rename only filenames containing Greek letters.
-- Preview, YES confirmation, collision-safe suffixes and CSV undo.
-- Protect against traversing junctions and symbolic links.
-- Python 3.10+, no external dependencies.
-- Simple Windows launcher.
+**Created by Dimitris Laidis** · Python 3.10+ · MIT License
 
-Transcription is ELOT 743-inspired, not exact certified compliance.
+A lightweight tool to safely convert Greek filenames and folders to Greeklish.
 
-For Windows, attach the Portable ZIP as the downloadable asset on the GitHub Release.
+### Features
+- Choose any directory at startup, with optional subdirectories.
+- Rename **only names containing Greek letters**; leave existing Latin-only names unchanged.
+- Preview changes and confirm with `YES`.
+- Preserve file contents and extensions.
+- Avoid overwrites; suffix conflicts with `(2)`, `(3)` and so on.
+- Skip symbolic links and Windows junctions.
+- Keep CSV undo logs to restore original names.
 
-**Created by:** Dimitris Laidis
-**License:** MIT
+### Downloads
+- **Windows ZIP** — Python script, double-click launcher, license and PDF manual.
+- **Source ZIP** — code, automated tests, documentation and PDF manual.
+- **PDF User Manual** — four-page, professionally formatted guide with usage, examples, undo and troubleshooting.
+
+The transliteration follows simplified ELOT 743 / ISO 843-inspired ASCII rules; it does not claim certified compliance.
+
+**To run:** Extract the Windows ZIP and double-click `Run_Greek_to_Greeklish.cmd`. Python 3.10 or later is required.
+
+Project: https://github.com/DimitrisLai/Greek-to-greeklish-renamer
