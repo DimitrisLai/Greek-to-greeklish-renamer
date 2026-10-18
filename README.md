@@ -11,7 +11,7 @@ A lightweight command-line utility for Windows and other platforms running Pytho
 **[Latest GitHub Release — Windows ZIP, Source ZIP & PDF User Manual](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/latest)**
 
 - **Windows ZIP**: the Python script, double-click launcher, license, author credit and public PDF manual.
-- **PDF User Manual**: clean 4-page instructions covering folder selection, subdirectories, examples, safe renaming, undo and troubleshooting.
+- **PDF User Manual**: redesigned 9-page manual with a professional cover and step-by-step instructions covering folder selection, subdirectories, examples, safe renaming, undo and troubleshooting.
 - **Source ZIP**: source code, documentation, tests and license.
 - The manual is also kept under [docs](docs/) in this repository after the release build completes.
 
