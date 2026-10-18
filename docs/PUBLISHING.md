@@ -1,13 +1,33 @@
-# Publishing on GitHub
+# Publishing and maintenance
 
-Repo: https://github.com/DimitrisLai/Greek-to-greeklish-renamer
+**Project:** https://github.com/DimitrisLai/Greek-to-greeklish-renamer
 
-Recommended topics (set via the gear icon in About):
-greeklish, greek, transliteration, elot-743, python, file-renamer, batch-rename, windows, unicode, cli.
+**Author:** Dimitris Laidis
 
-Suggested description:
-Safely convert Greek filenames and folders to Greeklish using ELOT 743-inspired rules, with preview, subdirectory support, collision protection and undo.
+## Public release
 
-After tests pass on the Actions tab, create a Release from main with tag v1.2.0, title Greek to Greeklish Renamer v1.2.0, and RELEASE_NOTES.md content. Attach the portable ZIP.
+The repository includes a one-time GitHub Actions workflow under `.github/workflows/publish-v1.2.0.yml`. The workflow:
 
-Use v1.2.1 for bugfixes, v1.3.0 for compatible features and v2.0.0 for breaking changes.
+1. Tests the Python application on Ubuntu.
+2. Generates the four-page public PDF user manual.
+3. Builds the Windows ZIP and source ZIP.
+4. Creates the v1.2.0 GitHub Release or replaces existing release assets.
+5. Attempts to add the generated manual PDF to `docs/`, and set repository topics.
+
+The release includes three assets: the Windows ZIP, the source ZIP, and the user manual PDF.
+
+The source ZIP is **not** a compiled executable: users need Python 3.10+ to run the program.
+
+## Search topics
+
+`greeklish`, `greek`, `transliteration`, `elot-743`, `python`, `file-renamer`, `batch-rename`, `windows`, `unicode`, `cli`.
+
+If the workflow does not successfully apply topics, edit them manually with the gear icon in the repository's **About** section.
+
+## Future releases
+
+For maintenance, use v1.2.1 for fixes, v1.3.0 for compatible feature additions, and v2.0.0 for breaking changes. Update versions in the Python script, manual generator, build script, release workflow, README and changelog.
+
+## Testing
+
+Run `python -m unittest discover -s tests -v` locally. Ensure GitHub Actions checks pass before tagging the next public version.
