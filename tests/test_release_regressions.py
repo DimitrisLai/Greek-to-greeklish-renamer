@@ -70,5 +70,21 @@ class ReleaseRegressionTests(unittest.TestCase):
             self.assertEqual(list(base.glob("greeklish_rename_log_*.csv")), [])
 
 
+    def test_cp1252_console_can_print_greek_names(self):
+        import os
+        import subprocess
+        import sys
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            (base / "Ελληνικά.mp3").write_bytes(b"contents")
+            env = dict(os.environ, PYTHONIOENCODING="cp1252")
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT), "--path", str(base), "--no-recursive", "--dry-run"],
+                env=env, capture_output=True, check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Ελληνικά.mp3", result.stdout.decode("utf-8"))
+            self.assertEqual((base / "Ελληνικά.mp3").read_bytes(), b"contents")
+
 if __name__ == "__main__":
     unittest.main()
