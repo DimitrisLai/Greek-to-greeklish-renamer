@@ -2,6 +2,11 @@
 
 **Safely convert Greek filenames and folder names into Greeklish.**
 
+![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+[![MIT License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Python tests](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/actions/workflows/tests.yml/badge.svg)](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/actions/workflows/tests.yml)
+
+
 **Created by [Dimitris Laidis](https://github.com/DimitrisLai)** · Version **1.2.1** · MIT License
 
 A lightweight command-line utility for Windows and other platforms running Python 3.10+. No additional Python packages are needed to run the application.
@@ -24,7 +29,7 @@ A lightweight command-line utility for Windows and other platforms running Pytho
 - **Only touches names containing Greek characters.** English/Greeklish-only filenames remain unchanged.
 - Optionally converts Greek folder names when scanning subdirectories.
 - Shows a full preview and requires you to type **YES** before applying changes.
-- Avoids overwriting other files: filename conflicts get suffixes such as \`(2)\` or \`(3)\`.
+- Avoids overwriting other files: filename conflicts get suffixes such as `(2)` or `(3)`.
 - Skips symbolic links and Windows junction/reparse points.
 - Logs completed changes in a CSV to support undo; changes are to **names**, never file contents.
 
@@ -40,42 +45,42 @@ A lightweight command-line utility for Windows and other platforms running Pytho
 ## How to run
 
 1. Extract the Windows ZIP and keep the two program files together.
-2. Double-click \`Run_Greek_to_Greeklish.cmd\`.
+2. Double-click `Run_Greek_to_Greeklish.cmd`.
 3. Enter the directory you want to process.
 4. Answer the subdirectory question.
-5. Review the changes and type \`YES\` to proceed.
+5. Review the changes and type `YES` to proceed.
 
 You can also use Python directly:
 
-\`\`\`powershell
+```powershell
 py rename_greek_to_greeklish.py
 py rename_greek_to_greeklish.py --path "D:\Music" --no-recursive --dry-run
 py rename_greek_to_greeklish.py --path "D:\Music" --recursive
 py rename_greek_to_greeklish.py --path "D:\Music" --recursive --files-only
-\`\`\`
+```
 
 ### Undo changes
 
 Keep the CSV created in the selected folder, then run:
 
-\`\`\`powershell
+```powershell
 py rename_greek_to_greeklish.py --path "D:\Music" --undo "D:\Music\greeklish_rename_log_...csv"
-\`\`\`
+```
 
-Type \`UNDO\` when prompted. Missing or conflicting paths are skipped rather than overwritten. Back up important folders before bulk renaming: playlists and applications may still refer to old paths.
+Type `UNDO` when prompted. Missing or conflicting paths are skipped rather than overwritten. Back up important folders before bulk renaming: playlists and applications may still refer to old paths.
 
 ## Automated testing
 
-\`\`\`powershell
+```powershell
 py -m unittest discover -s tests -v
-\`\`\`
+```
 
 The automated suite covers Windows Unicode output, transliteration, Greek-only filtering, folder selection, recursive and nonrecursive scanning, filename conflicts, safety and undo. GitHub Actions runs checks on Windows and Linux.
 
 ## Documentation, author and license
 
 - **Public user manual:** attached to [GitHub Releases](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases).
-- [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [License](LICENSE)
+- [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [License](LICENSE)
 - **Author:** Dimitris Laidis ([DimitrisLai](https://github.com/DimitrisLai))
 - **License:** MIT, copyright © 2026 Dimitris Laidis.
 
