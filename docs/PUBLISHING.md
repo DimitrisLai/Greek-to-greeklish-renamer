@@ -12,7 +12,7 @@ The repository includes a one-time GitHub Actions workflow under `.github/workfl
 2. Generates the four-page public PDF user manual.
 3. Builds the Windows ZIP and source ZIP.
 4. Creates the v1.2.1 GitHub Release or replaces existing release assets.
-5. Attempts to add the generated manual PDF to `docs/`, and set repository topics.
+5. Commits the generated manual PDF to `docs/`.
 
 The release includes three assets: the Windows ZIP, the source ZIP, and the user manual PDF.
 
@@ -22,7 +22,7 @@ The source ZIP is **not** a compiled executable: users need Python 3.10+ to run 
 
 `greeklish`, `greek`, `transliteration`, `elot-743`, `python`, `file-renamer`, `batch-rename`, `windows`, `unicode`, `cli`.
 
-If the workflow does not successfully apply topics, edit them manually with the gear icon in the repository's **About** section.
+Repository Topics require owner/admin settings access. Add them manually with the gear icon in the repository's **About** section. The automatic workflow does not change repository Topics.
 
 ## Future releases
 
