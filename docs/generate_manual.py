@@ -40,7 +40,7 @@ def base(c,n):
     c.line(L,58,R,58)
     c.setFillColor(MUTED)
     c.setFont("DV",7.4)
-    c.drawString(L,41,"Greek to Greeklish Renamer  |  v1.2.0  |  Dimitris Laidis")
+    c.drawString(L,41,"Greek to Greeklish Renamer  |  v1.2.1  |  Dimitris Laidis")
     c.drawRightString(R,41,str(n))
 
 def box(c,y,height):
@@ -64,7 +64,7 @@ def build(dest):
     fonts()
     dest.parent.mkdir(parents=True,exist_ok=True)
     c=canvas.Canvas(str(dest),pagesize=A4,pageCompression=1)
-    c.setTitle("Greek to Greeklish Renamer | User Manual v1.2.0")
+    c.setTitle("Greek to Greeklish Renamer | User Manual v1.2.1")
     c.setAuthor("Dimitris Laidis")
     c.setSubject("Public user manual for Greek to Greeklish Renamer")
     # First page: clear cover + table of contents
@@ -97,7 +97,7 @@ def build(dest):
     c.setFillColor(NAVY);c.setFont("DVB",10)
     c.drawString(L,105,"Created by Dimitris Laidis")
     c.setFillColor(MUTED);c.setFont("DV",8)
-    c.drawString(L,88,"MIT License  |  Python 3.10+  |  Version 1.2.0")
+    c.drawString(L,88,"MIT License  |  Python 3.10+  |  Version 1.2.1")
     c.showPage()
     # Page 2: instructions
     base(c,2);y=section(c,"01 / QUICK START","Getting started")
