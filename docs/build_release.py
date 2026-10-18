@@ -4,10 +4,10 @@ import subprocess
 import zipfile
 import argparse
 
-VERSION="1.2.0"
-PDF="Greek_to_Greeklish_Renamer_User_Manual_v1.2.0_Dimitris_Laidis.pdf"
-WIN="Greeklish-Renamer-v1.2.0-Windows-Dimitris-Laidis.zip"
-SOURCE="Greeklish-Renamer-v1.2.0-Source-Dimitris-Laidis.zip"
+VERSION="1.2.1"
+PDF="Greek_to_Greeklish_Renamer_User_Manual_v1.2.1_Dimitris_Laidis.pdf"
+WIN="Greeklish-Renamer-v1.2.1-Windows-Dimitris-Laidis.zip"
+SOURCE="Greeklish-Renamer-v1.2.1-Source-Dimitris-Laidis.zip"
 
 def build(output):
     root=Path(__file__).resolve().parents[1]
