@@ -12,7 +12,7 @@ The repository includes a one-time GitHub Actions workflow under `.github/workfl
 2. Generates the four-page public PDF user manual.
 3. Builds the Windows ZIP and source ZIP.
 4. Creates the v1.2.1 GitHub Release or replaces existing release assets.
-5. Commits the generated manual PDF to `docs/`.
+5. Publishes downloadable ZIP and PDF assets to GitHub Releases. The current manual is also archived in `docs/`.
 
 The release includes three assets: the Windows ZIP, the source ZIP, and the user manual PDF.
 
