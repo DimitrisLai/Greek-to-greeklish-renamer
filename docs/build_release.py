@@ -24,7 +24,7 @@ def build(output):
     tracked=[p.decode("utf-8") for p in raw.split(b"\0") if p]
     with zipfile.ZipFile(output/SOURCE,"w",compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
         for name in tracked:
-            if name.startswith(".github/") or name.endswith(".pdf"):
+            if name.endswith(".pdf"):
                 continue
             z.write(root/name,name)
         z.write(pdf,"docs/"+PDF)
