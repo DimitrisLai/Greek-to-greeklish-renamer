@@ -10,3 +10,6 @@
 Transcription is ELOT 743-inspired, not exact certified compliance.
 
 For Windows, attach the Portable ZIP as the downloadable asset on the GitHub Release.
+
+**Created by:** Dimitris Laidis
+**License:** MIT
