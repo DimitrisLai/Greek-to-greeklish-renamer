@@ -1,280 +1,330 @@
-"""Public user manual — Greek to Greeklish Renamer v1.2.1.
-
-Build-time requirement: reportlab, DejaVu and Lato fonts. No runtime dependency.
-"""
+#!/usr/bin/env python3
+"""Produce the public v2.0.0 user manual (build-time dependency: ReportLab)."""
 from __future__ import annotations
+
 import argparse
 from pathlib import Path
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
 from reportlab.lib.colors import HexColor
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.styles import ParagraphStyle
+from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
-W,H=A4; M=61; RIGHT=W-M; WIDTH=W-2*M
-NAVY=HexColor('#0C192C'); NAVY2=HexColor('#142A43')
-TEAL=HexColor('#009D97'); WHITE=HexColor('#FFFFFF')
-INK=HexColor('#152437'); MID=HexColor('#516173')
-PALE=HexColor('#EFF3F6'); PALEBLUE=HexColor('#E9F0FA')
-LINE=HexColor('#DDE3E9')
-REG='Lato'; BOLD='LatoBold'; HEAVY='LatoHeavy'; MONO='DejaVuMono'
+VERSION = '2.0.0'
+AUTHOR = 'Dimitris Laidis'
+REPO = 'github.com/DimitrisLai/Greek-to-greeklish-renamer'
+W, H = A4
+L, R = 58, W-58
+CW = R-L
+NAVY=HexColor('#0B1728'); NAVY2=HexColor('#142B44')
+TEAL=HexColor('#009E99'); WHITE=colors.white; INK=HexColor('#142239')
+SUB=HexColor('#536578'); PALE=HexColor('#F1F5F8'); CLOUD=HexColor('#E8F0F9')
+LINE=HexColor('#DAE3EA'); CYAN=HexColor('#B9E7E4')
 
 
-def init_fonts():
-    lato=Path('/usr/share/fonts/truetype/lato'); dej=Path('/usr/share/fonts/truetype/dejavu')
-    pdfmetrics.registerFont(TTFont(REG,str(lato/'Lato-Regular.ttf')))
-    pdfmetrics.registerFont(TTFont(BOLD,str(lato/'Lato-Bold.ttf')))
-    pdfmetrics.registerFont(TTFont(HEAVY,str(lato/'Lato-Heavy.ttf')))
-    pdfmetrics.registerFont(TTFont(MONO,str(dej/'DejaVuSansMono.ttf')))
-    pdfmetrics.registerFontFamily(REG,normal=REG,bold=BOLD)
+def fonts():
+    p=Path('/usr/share/fonts/truetype/lato')
+    q=Path('/usr/share/fonts/truetype/dejavu')
+    pdfmetrics.registerFont(TTFont('Lato',str(p/'Lato-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('LatoB',str(p/'Lato-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('LatoH',str(p/'Lato-Heavy.ttf')))
+    pdfmetrics.registerFont(TTFont('Mono',str(q/'DejaVuSansMono.ttf')))
+    pdfmetrics.registerFontFamily('Lato',normal='Lato',bold='LatoB')
 
 
-def para(c,html,y,x=M,width=WIDTH,size=10.1,leading=15.8,color=INK):
-    s=ParagraphStyle('para',fontName=REG,fontSize=size,leading=leading,textColor=color)
-    item=Paragraph(html,s)
-    _,h=item.wrap(width,900)
-    item.drawOn(c,x,y-h)
-    return y-h
+def paragraph(c,html,y,x=L,width=CW,size=10,leading=16,color=INK,bold=False):
+    style=ParagraphStyle('inline',fontName='LatoB' if bold else 'Lato',fontSize=size,
+            leading=leading,textColor=color,spaceBefore=0,spaceAfter=0,allowWidows=0,
+            allowOrphans=0)
+    p=Paragraph(html,style)
+    _,height=p.wrap(width,1000)
+    p.drawOn(c,x,y-height)
+    return y-height
 
 
-def section(c,title,y):
-    c.setFillColor(INK);c.setFont(BOLD,12.1);c.drawString(M,y,title)
-    return y-20
-
-
-def body_page(c,n,title,deck):
+def title(c,n,heading,subtitle):
     c.setFillColor(WHITE);c.rect(0,0,W,H,fill=1,stroke=0)
-    c.setFillColor(NAVY);c.rect(0,H-58,W,58,fill=1,stroke=0)
-    c.setFont(BOLD,8);c.setFillColor(WHITE);c.drawString(M,H-35,'GREEK TO GREEKLISH RENAMER')
-    c.setFont(REG,8);c.setFillColor(HexColor('#B6C5D5'));c.drawRightString(RIGHT,H-35,'USER MANUAL  /  v1.2.1')
-    c.setFont(HEAVY,22.0);c.setFillColor(NAVY);c.drawString(M,H-111,title)
-    y=para(c,deck,H-129,size=10,leading=15.5,color=MID)-20
-    c.setStrokeColor(LINE);c.line(M,53,RIGHT,53)
-    c.setFont(REG,7.7);c.setFillColor(MID)
-    c.drawString(M,37,'Dimitris Laidis  /  Greek-to-greeklish-renamer  /  MIT License')
-    c.drawRightString(RIGHT,37,f'{n:02d}')
+    c.setFillColor(NAVY);c.rect(0,H-53,W,53,fill=1,stroke=0)
+    c.setFont('LatoB',8.5);c.setFillColor(WHITE)
+    c.drawString(L,H-33,'GREEK TO GREEKLISH RENAMER')
+    c.setFont('Lato',8);c.setFillColor(CYAN)
+    c.drawRightString(R,H-33,'USER MANUAL   /   v'+VERSION)
+    c.setFont('LatoH',23);c.setFillColor(NAVY)
+    c.drawString(L,H-111,f'{n:02d} / {heading}')
+    y=paragraph(c,subtitle,H-130,size=10.1,leading=16,color=SUB)-25
+    c.setStrokeColor(LINE);c.line(L,55,R,55)
+    c.setFillColor(SUB);c.setFont('Lato',7.7)
+    c.drawString(L,36,f'{AUTHOR}  /  {REPO}  /  MIT License')
+    c.drawRightString(R,36,f'{n+1:02d}')
     return y
 
 
-def table(c,headers,rows,y,widths,heights=None):
-    if heights is None: heights=[40]*len(rows)
-    c.setFillColor(NAVY);c.rect(M,y-32,WIDTH,32,fill=1,stroke=0)
-    x=M
-    for h,w in zip(headers,widths):
-        c.setFont(BOLD,8.5);c.setFillColor(WHITE);c.drawString(x+12,y-21,h);x+=w
-    y-=32
-    for idx,(vals,rh) in enumerate(zip(rows,heights)):
-        c.setFillColor(PALE if idx%2 else WHITE);c.rect(M,y-rh,WIDTH,rh,fill=1,stroke=0)
-        xx=M
-        for val,w in zip(vals,widths):
-            para(c,str(val),y-9,xx+12,w-20,size=9.25,leading=13.4)
-            xx+=w
-        y-=rh
+def section(c,text,y):
+    c.setFillColor(NAVY);c.setFont('LatoB',12)
+    c.drawString(L,y,text)
     return y-20
 
 
-def note(c,title,body,y,color=PALEBLUE,height=87):
-    c.setFillColor(color);c.rect(M,y-height,WIDTH,height,fill=1,stroke=0)
-    c.setFillColor(TEAL);c.setFont(BOLD,9);c.drawString(M+16,y-24,title.upper())
-    para(c,body,y-34,M+16,WIDTH-34,size=9.5,leading=15)
-    return y-height-22
-
-
-def bullet(c,items,y):
+def bullets(c,items,y,margin=0):
     for item in items:
-        c.setFillColor(TEAL);c.circle(M+5,y-7,2.3,stroke=0,fill=1)
-        y=para(c,item,y,M+19,WIDTH-19,size=9.9,leading=15.8)-12
+        c.setFillColor(TEAL);c.circle(L+6+margin,y-7,2.1,fill=1,stroke=0)
+        y=paragraph(c,item,y,L+21+margin,CW-22-margin,size=9.8,leading=15.5)-10
     return y
 
 
-def code(c,rows,y,height=None):
-    height=height or (23+len(rows)*20)
-    c.setFillColor(PALEBLUE);c.rect(M,y-height,WIDTH,height,fill=1,stroke=0)
-    c.setFillColor(NAVY);c.setFont(MONO,8.3)
+def table(c,headers,rows,y,widths=None,size=9.4,padding=10):
+    if widths is None: widths=[CW/len(headers)]*len(headers)
+    assert sum(widths)<=CW+1
+    hh=32
+    c.setFillColor(NAVY);c.rect(L,y-hh,CW,hh,fill=1,stroke=0)
+    xx=L
+    for head,ww in zip(headers,widths):
+        c.setFont('LatoB',8.4);c.setFillColor(WHITE)
+        c.drawString(xx+11,y-21,head)
+        xx+=ww
+    y-=hh
     for i,row in enumerate(rows):
-        c.drawString(M+17,y-25-i*20,row)
+        cols=[]
+        for value,width in zip(row,widths):
+            s=ParagraphStyle('cell',fontName='Lato',fontSize=size,leading=size+4,
+                             textColor=INK)
+            p=Paragraph(str(value),s)
+            _,h=p.wrap(width-2*padding,500)
+            cols.append((p,h))
+        rh=max(30,max(h for p,h in cols)+17)
+        c.setFillColor(PALE if i%2 else WHITE)
+        c.rect(L,y-rh,CW,rh,fill=1,stroke=0)
+        xx=L
+        for (p,h),ww in zip(cols,widths):
+            p.drawOn(c,xx+padding,y-padding-h)
+            xx+=ww
+        y-=rh
+    return y-23
+
+
+def code(c,lines,y,size=8.4):
+    height=len(lines)*21+26
+    c.setFillColor(CLOUD);c.rect(L,y-height,CW,height,fill=1,stroke=0)
+    c.setFillColor(NAVY);c.setFont('Mono',size)
+    for i,line in enumerate(lines):
+        if pdfmetrics.stringWidth(line,'Mono',size)>CW-31:
+            raise ValueError('code block line too long: '+line)
+        c.drawString(L+16,y-23-21*i,line)
     return y-height-20
 
 
-def cover(c):
+def note(c,heading,text,y,height=None):
+    s=ParagraphStyle('note',fontName='Lato',fontSize=9.7,leading=15.3,textColor=INK)
+    p=Paragraph(text,s);_,h=p.wrap(CW-35,400)
+    hh=height or max(74,h+48)
+    c.setFillColor(CLOUD);c.rect(L,y-hh,CW,hh,fill=1,stroke=0)
+    c.setFillColor(TEAL);c.setFont('LatoB',8.6)
+    c.drawString(L+16,y-24,heading.upper())
+    p.drawOn(c,L+16,y-34-h)
+    return y-hh-20
+
+
+def check(y,what):
+    if y<75:raise AssertionError('Page layout overflow: '+what+' at '+str(y))
+
+
+def make(out:Path):
+    fonts();out.parent.mkdir(parents=True,exist_ok=True)
+    c=canvas.Canvas(str(out),pagesize=A4,pageCompression=1)
+    c.setTitle('Greek to Greeklish Renamer — Complete User Manual v'+VERSION)
+    c.setAuthor(AUTHOR)
+    c.setSubject('Windows desktop UI, command-line usage, CSV undo and safe filename transliteration')
+    c.setKeywords('Greek, Greeklish, ELOT 743, Windows, file renamer, transliteration')
+    # Page 1 - editorial cover, matching the user's other manuals
     c.setFillColor(NAVY);c.rect(0,0,W,H,fill=1,stroke=0)
-    c.setFillColor(TEAL);c.rect(0,H-15,W,15,fill=1,stroke=0)
-    # The abstract circles are subtle editorial shapes, not Greek/ethnic artwork.
-    c.setFillColor(NAVY2);c.circle(W+73,H-148,210,stroke=0,fill=1)
-    c.setFillColor(HexColor('#123E43'));c.circle(W+86,-85,193,stroke=0,fill=1)
-    c.setFont(BOLD,10);c.setFillColor(TEAL)
-    c.drawString(M,H-182,'USER MANUAL  /  OCTOBER 2026')
-    c.setFillColor(WHITE);c.setFont(HEAVY,40)
-    c.drawString(M,H-249,'Greek to')
-    c.drawString(M,H-298,'Greeklish')
-    c.drawString(M,H-347,'Renamer')
-    c.setFont(REG,14);c.setFillColor(HexColor('#CAD5E0'))
-    c.drawString(M,H-394,'Rename Greek filenames and folders.')
-    c.drawString(M,H-417,'Preview first. Confirm every change.')
-    c.setStrokeColor(HexColor('#284458'));c.line(M,185,RIGHT,185)
-    c.setFont(REG,9.6);c.setFillColor(HexColor('#AFC0D2'))
-    c.drawString(M,160,'Folder selection  /  Optional subfolders  /  CSV undo log')
-    c.setFont(BOLD,10);c.setFillColor(TEAL)
-    c.drawString(M,108,'v1.2.1  /  OPEN SOURCE  /  PYTHON 3.10+')
-    c.setFont(REG,9.2);c.setFillColor(HexColor('#AFC0D2'))
-    c.drawString(M,79,'Created by Dimitris Laidis')
-    c.drawString(M,58,'github.com/DimitrisLai/Greek-to-greeklish-renamer')
+    c.setFillColor(TEAL);c.rect(0,H-14,W,14,fill=1,stroke=0)
+    c.setFillColor(NAVY2);c.circle(W+48,H-78,188,fill=1,stroke=0)
+    c.setFillColor(HexColor('#124849'));c.circle(W-20,-80,175,fill=1,stroke=0)
+    c.setFillColor(CYAN);c.setFont('LatoB',11)
+    c.drawString(61,H-160,'WINDOWS DESKTOP APPLICATION  /  USER MANUAL')
+    c.setFillColor(WHITE);c.setFont('LatoH',37)
+    c.drawString(61,H-228,'Greek to')
+    c.drawString(61,H-278,'Greeklish Renamer')
+    c.setFillColor(HexColor('#CBD9E4'));c.setFont('Lato',14)
+    c.drawString(62,H-327,'Rename confidently. Preview every change.')
+    c.drawString(62,H-350,'Keep English filenames untouched.')
+    c.setStrokeColor(TEAL);c.setLineWidth(3);c.line(62,H-398,228,H-398)
+    c.setFillColor(HexColor('#BCD1DE'));c.setFont('Lato',10.2)
+    c.drawString(62,H-454,'Folder browser  /  Greek-only scanning  /  CSV undo')
+    c.drawString(62,H-477,'Simple interface  /  Standalone Windows EXE')
+    c.setFont('LatoB',11);c.setFillColor(CYAN)
+    c.drawString(62,103,'VERSION 2.0.0  /  OPEN SOURCE  /  MIT LICENSE')
+    c.setFillColor(HexColor('#ADBECD'));c.setFont('Lato',10)
+    c.drawString(62,78,'Created by Dimitris Laidis')
+    c.drawString(62,56,REPO)
     c.showPage()
 
+    # Page 2
+    y=title(c,1,'Start here','Choose the correct download, then complete a safe first run in a few minutes.')
+    y=section(c,'Which file should I download?',y)
+    y=table(c,['DOWNLOAD','WHO IT IS FOR'],[
+       ('<b>Windows ZIP (recommended)</b>','Contains the compiled <b>GreeklishRenamer.exe</b>, PDF manual, license and quick-start text. <b>No Python installation.</b>'),
+       ('<b>Source ZIP</b>','For developers and Python users: GUI, command-line edition, tests, documentation and build scripts.'),
+       ('<b>PDF User Manual</b>','This document; also included in the Windows ZIP.')],y,[179,CW-179],size=9.3)
+    y=section(c,'Your first scan in six steps',y)
+    y=bullets(c,[
+       '<b>1.</b> Download the Windows ZIP from the v2.0.0 GitHub Release.',
+       '<b>2.</b> Right-click the ZIP and choose <b>Extract All</b>.',
+       '<b>3.</b> Double-click <b>GreeklishRenamer.exe</b>.',
+       '<b>4.</b> Browse to a test folder with a few Greek filenames.',
+       '<b>5.</b> Leave subdirectories disabled at first; click <b>Preview changes</b>.',
+       '<b>6.</b> Review the full table; click <b>Apply renames</b> and confirm only if correct.'
+    ],y)
+    y=note(c,'Start safely','Make a separate backup before bulk changes. The preview does not modify files. A CSV undo log is created for each applied run.',y)
+    check(y,'start page');c.showPage()
 
-def p2(c):
-    y=body_page(c,2,'01 / Get started','Greek to Greeklish Renamer converts Greek letters in filenames and folder names into Latin characters. It works on the names of items, not their contents.')
-    y=section(c,'Requirements',y)
-    y=bullet(c,['Windows 10/11 for the double-click launcher; Python <b>3.10 or newer</b> installed.',
-                'No extra Python packages or internet connection needed to run the renamer.',
-                'Rename permission for the chosen folder; keep a separate backup for important data.'],y)-7
-    y=section(c,'Five easy steps',y)
-    y=bullet(c,['Download and <b>extract</b> the Windows ZIP from GitHub Releases.',
-                'Double-click <b>Run_Greek_to_Greeklish.cmd</b>.',
-                'Paste a directory path, or press Enter to use the folder containing the script.',
-                'Answer <b>Y</b> to include subfolders, or <b>N / Enter</b> to scan the selected folder only.',
-                'Review the proposal. Type the exact word <b>YES</b> to apply or cancel otherwise.'],y)-2
-    y=section(c,'What is in the Windows ZIP?',y)
-    y=table(c,['FILE','PURPOSE'],[
-        ('rename_greek_to_greeklish.py','Main renaming program.'),
-        ('Run_Greek_to_Greeklish.cmd','Windows launcher; double-click to run.'),
-        ('User Manual / LICENSE / AUTHOR.txt','Instructions, license terms and author credit.')
-    ],y,[243,WIDTH-243],[44,44,49])
-    note(c,'Important','Do not run the launcher directly inside the ZIP preview. Extract the files first.',y,height=74)
-    c.showPage()
+    # Page 3
+    y=title(c,2,'Meet the desktop interface','A focused window for selecting a folder, reviewing changes, applying renames and restoring names.')
+    y=section(c,'Screen guide',y)
+    y=table(c,['AREA','WHAT IT DOES'],[
+        ('<b>Folder location</b>','Enter a directory or choose Browse… to open the Windows folder picker.'),
+        ('<b>Include subdirectories</b>','Process files within nested folders; off by default.'),
+        ('<b>Also rename Greek folder names</b>','Optional and only available when subdirectories are included.'),
+        ('<b>Preview changes</b>','Build a read-only plan with current paths and proposed names.'),
+        ('<b>Apply renames</b>','Ask for confirmation, recheck the plan, then rename and log results.'),
+        ('<b>Export preview</b>','Save the proposed changes to CSV without modifying files.'),
+        ('<b>Undo from CSV</b>','Select a previous undo log and type <b>UNDO</b> to restore names.')
+    ],y,[196,CW-196],size=9.2)
+    y=note(c,'Important detail','Changing the folder or either option clears the old preview. The application requires a new preview before applying renames.',y)
+    check(y,'interface page');c.showPage()
 
+    # Page 4
+    y=title(c,3,'The preview-first workflow','The application is designed to make each proposed change visible before committing it.')
+    y=section(c,'What you see before renaming',y)
+    y=table(c,['TYPE','CURRENT PATH','PROPOSED PATH'],[
+       ('File','Ελληνικά.mp3','Ellinika.mp3'),
+       ('File','DJ - Ελληνικά.flac','DJ - Ellinika.flac'),
+       ('Folder','Μουσική','Mousiki'),
+       ('File','Αθήνα/Τραγούδι.mp3','Αθήνα/Tragoudi.mp3')
+    ],y,[62,191,CW-253],size=9.1)
+    y=section(c,'Applying a reviewed plan',y)
+    y=bullets(c,[
+       'Only rows in the preview are candidates. Names with no Greek letters are not included.',
+       'Pressing <b>Apply renames</b> shows a separate confirmation dialog.',
+       'Before applying, the tool recomputes the plan. If the folder changed, the operation is rejected and a new preview is required.',
+       'A completed operation writes a timestamped CSV undo log to the selected folder.',
+       'If files are locked, missing or permissions fail, some changes may be skipped; review the completion count and retain the log.'
+    ],y)
+    y=note(c,'Do not treat preview as a file-content comparison','This tool modifies filenames and directory names, not media metadata, contents, lyrics or audio. It does not compare hashes or file quality.',y)
+    check(y,'preview page');c.showPage()
 
-def p3(c):
-    y=body_page(c,3,'02 / Your first rename','Choose a folder and review the preview before changing any names. The Windows launcher keeps the console open when the program ends.')
-    y=section(c,'Example interactive session',y)
-    y=code(c,['GREEK TO GREEKLISH RENAMER v1.2.1','Folder path: D:\\Music','Include subdirectories? [y/N]: n','','  Ελληνικά.mp3  -->  Ellinika.mp3','  Μουσική.flac  -->  Mousiki.flac','','Proposed changes: 2','Type YES to apply changes:'],y,219)
-    y=section(c,'Confirmation rules',y)
-    y=bullet(c,['The program does not rename anything before the confirmation prompt.',
-                '<b>YES</b> (uppercase) approves the proposed rename operations.',
-                'Press Enter or type anything else to cancel without renaming.',
-                'For large folders, the on-screen preview displays up to <b>80</b> planned changes, plus a count of the rest.'],y)
-    note(c,'After running','The program reports the number renamed and writes a dated <b>greeklish_rename_log_*.csv</b> file in the selected folder. Keep the CSV for undo.',y,height=90)
-    c.showPage()
+    # Page 5
+    y=title(c,4,'Folders and subdirectories','Control scope independently: scan inside subfolders, and optionally rename the subfolders themselves.')
+    y=table(c,['INCLUDE SUBDIRECTORIES','RENAME GREEK FOLDERS','BEHAVIOR'],[
+       ('<b>Off (default)</b>','Disabled','Only files directly inside the selected folder are considered.'),
+       ('<b>On</b>','Off','Files are considered recursively; folder names remain unchanged.'),
+       ('<b>On</b>','On','Files and Greek-named folders are candidates for renaming.')
+    ],y,[137,135,CW-272],size=9)
+    y=section(c,'Example: an artist collection',y)
+    y=code(c,['BEFORE  /  Music / Ελληνικά / Τραγούδι.mp3',
+              'AFTER   /  Music / Ellinika / Tragoudi.mp3'],y,size=7.9)
+    y=paragraph(c,'With the second option disabled, <b>Ελληνικά</b> remains the same folder name, while <b>Τραγούδι.mp3</b> becomes <b>Tragoudi.mp3</b>.',y,size=9.7)-20
+    y=section(c,'Linked directories are excluded',y)
+    y=bullets(c,[
+       'Recursive scans skip symbolic links and Windows junction / reparse points.',
+       'The selected root directory must be a normal accessible folder, not a link.',
+       'Folder moves are performed after filenames inside the folder, so the undo log can restore paths in reverse order.'
+    ],y)
+    check(y,'folder page');c.showPage()
 
+    # Page 6
+    y=title(c,5,'Greek-to-Greeklish rules','Simple ASCII transcription inspired by ELOT 743 / ISO 843, with Greek accents removed.')
+    y=table(c,['ORIGINAL','RESULT','NOTES'],[
+       ('Γιώργος Μαζωνάκης.mp3','Giorgos Mazonakis.mp3','Greek name example'),
+       ('Δημήτρης Κόκοτας.flac','Dimitris Kokotas.flac','File extension preserved'),
+       ('DJ - Ελληνικά.mp3','DJ - Ellinika.mp3','Mixed Latin / Greek'),
+       ('Χρήστος.mp3','Christos.mp3','χ → ch'),
+       ('Μπάμπης.mp3','Bampis.mp3','Context-dependent μπ'),
+       ('Αυτοκίνητο.mp3','Aftokinito.mp3','Context-dependent αυ'),
+       ('English Song.mp3','Unchanged','No Greek letters')
+    ],y,[175,170,CW-345],size=8.75)
+    y=section(c,'A note about spelling',y)
+    y=paragraph(c,'Personal names have more than one accepted Latin spelling. This software aims for consistent filename-friendly ASCII results; it is <b>not a certified, fully reversible or exhaustive ELOT 743 implementation</b>. Review names that matter to you.',y,size=9.8,leading=16)-19
+    y=note(c,'Greek-only filter','The application examines each file or folder <b>name</b>, never its content. English or already-Greeklish names are skipped.',y)
+    check(y,'conversion page');c.showPage()
 
-def p4(c):
-    y=body_page(c,4,'03 / Subfolders and scope','The program asks whether you want to include subdirectories. Each choice has a different effect on the scan.')
-    y=table(c,['ANSWER','WHAT HAPPENS'],[
-       ('N or Enter','Only files directly inside the selected directory are examined; subfolders stay untouched.'),
-       ('Y','Files in nested folders are included. Greek-named subfolders are renamed after their contents.')
-    ],y,[137,WIDTH-137],[66,71])
-    y=section(c,'Examples',y)
-    y=code(c,['D:\\Music\\Ελληνικά.mp3    -> D:\\Music\\Ellinika.mp3',
-              'D:\\Music\\Greek\\Τραγούδι.mp3  -> ...\\Tragoudi.mp3'],y,88)
-    y=section(c,'Files only, even with recursive scanning',y)
-    y=para(c,'Use <b>--recursive --files-only</b> to inspect files in subfolders while keeping all directory names unchanged.',y)-22
-    y=section(c,'Names containing no Greek letters',y)
-    y=bullet(c,['<b>English Song.mp3</b> stays exactly as it is.',
-                '<b>Artist - Ελληνικό.mp3</b> is eligible because part of its name contains Greek letters.',
-                'The application does not inspect lyrics, audio tags, photo contents or document text.'],y)
-    note(c,'Link protection','Symbolic links and Windows junctions/reparse points are skipped during traversal.',y,height=76)
-    c.showPage()
+    # Page 7
+    y=title(c,6,'Safety, conflicts and undo','The GUI protects unrelated names, but important collections should still be backed up.')
+    y=section(c,'Collision behavior',y)
+    y=table(c,['EXISTING NAME','GREEK ORIGINAL','RESULT'],[
+       ('Ellinika.mp3','Ελληνικά.mp3','Ellinika (2).mp3'),
+       ('Ellinika (2).mp3','Ελληνικά.mp3','Ellinika (3).mp3 (if needed)')
+    ],y,[170,160,CW-330],size=8.75)
+    y=section(c,'Restoring names',y)
+    y=bullets(c,[
+       'Keep the <b>greeklish_rename_log_YYYYMMDD_HHMMSS_microseconds.csv</b> created in the chosen folder.',
+       'Click <b>Undo from CSV</b> and select the log from the run you want to reverse.',
+       'Verify that the folder is correct, then type the exact word <b>UNDO</b>.',
+       'Undo processes changes in reverse order. If a source is missing or an original destination is now occupied, it skips that row rather than overwriting.'
+    ],y)
+    y=note(c,'Undo is not an independent backup','Do not delete your separate backups until you verify the results. A crash, locked file, moved directory, concurrent changes or filesystem error can prevent full restoration.',y)
+    check(y,'safety page');c.showPage()
 
+    # Page 8
+    y=title(c,7,'Source edition and command line','The original command-line renamer remains available for automation and users who prefer console controls.')
+    y=section(c,'Run the Python GUI (source edition)',y)
+    y=code(c,['py greeklish_gui.py','py greeklish_gui.py --version','py greeklish_gui.py --self-test'],y,size=8.6)
+    y=section(c,'Keep using the command-line edition',y)
+    y=code(c,['py rename_greek_to_greeklish.py',
+       'py rename_greek_to_greeklish.py --path "D:/Music" --dry-run',
+       'py rename_greek_to_greeklish.py --path "D:/Music" --recursive',
+       'py rename_greek_to_greeklish.py --path "D:/Music" --recursive --files-only'],y,size=7.6)
+    y=section(c,'Undo from PowerShell or Command Prompt',y)
+    y=code(c,['py rename_greek_to_greeklish.py --path "D:/Music"',
+       '  --undo "D:/Music/greeklish_rename_log_...csv"'],y,size=7.7)
+    y=paragraph(c,'The two-line undo example above is conceptual; put it on one command line, or use the GUI. The <b>--yes</b> flag skips the CLI confirmation prompt and should only be used deliberately.',y,size=9.3,leading=15.5)
+    check(y,'cli page');c.showPage()
 
-def p5(c):
-    y=body_page(c,5,'04 / Renaming examples','Greeklish spelling is approximate: the tool follows simplified ELOT 743 / ISO 843-inspired ASCII transcription rules.')
-    y=table(c,['ORIGINAL FILENAME','PROPOSED RESULT'],[
-       ('Γιώργος Μαζωνάκης.mp3','Giorgos Mazonakis.mp3'),
-       ('Δημήτρης Κόκοτας.flac','Dimitris Kokotas.flac'),
-       ('DJ Set - Ελληνικά.mp3','DJ Set - Ellinika.mp3'),
-       ('Αυτοκίνητο.jpg','Aftokinito.jpg'),
-       ('English Song.mp3','Unchanged'),
-    ],y,[WIDTH*.49,WIDTH*.51],[43]*5)
-    y=section(c,'What is preserved?',y)
-    y=bullet(c,['Original file contents, file types and existing Latin text.',
-                'File extensions such as <b>.mp3</b>, <b>.flac</b>, and <b>.jpg</b>.',
-                'Spaces, punctuation and the relative folder structure, except eligible Greek names.'],y)-3
-    note(c,'Spelling limitation','The program removes accents and uses simplified context rules. It is <b>not</b> a certified, reversible implementation of ELOT 743. Proper-name spellings may differ.',y,height=95)
-    c.showPage()
+    # Page 9
+    y=title(c,8,'Troubleshooting','Quick checks for common problems in the Windows UI and Python source edition.')
+    y=table(c,['PROBLEM','WHAT TO DO'],[
+       ('The EXE does not open','Extract the ZIP first. Windows SmartScreen may prompt on an unsigned community-built EXE; download only from the official GitHub Release.'),
+       ('Nothing found','Check the selected folder and subdirectory option. Only names containing Greek letters qualify.'),
+       ('Apply is disabled','Run Preview first. Changing options invalidates the old preview.'),
+       ('Folder changed before apply','Run Preview again; the stale plan is intentionally rejected.'),
+       ('Access denied / locked file','Close music players, editors or sync clients. Check permissions and try again.'),
+       ('Undo restores only some rows','Review the CSV and check for moved/missing files or occupied original names.'),
+       ('Source GUI fails to start','Confirm Python 3.10+ includes Tkinter. Use the standalone EXE if Python is not available.')
+    ],y,[151,CW-151],size=9.15)
+    y=note(c,'Windows build disclaimer','The GitHub workflow tests the engine on Windows and Linux and builds a Windows EXE. You should still smoke-test launching and renaming on your own Windows desktop.',y)
+    check(y,'troubleshooting page');c.showPage()
 
-
-def p6(c):
-    y=body_page(c,6,'05 / Safety and conflicts','The renamer uses a preview-first design, but bulk renaming can affect applications or playlists that reference the original paths.')
-    y=section(c,'Safety behavior',y)
-    y=bullet(c,['No changes without the exact YES confirmation (unless you intentionally use <b>--yes</b>).',
-                'An existing file or folder is never deliberately replaced by the renamer.',
-                'When a new Latin filename is already occupied, the tool adds a suffix such as <b>(2)</b> or <b>(3)</b>.',
-                'Each successful operation is added to a UTF-8 CSV log, which can later be used for undo.',
-                'Linked folders and Windows junctions are excluded.'],y)-4
-    y=section(c,'Filename conflict example',y)
-    y=table(c,['EXISTING NAMES','RESULT'],[
-        ('Ελληνικά.mp3 + Ellinika.mp3','Ellinika.mp3 stays; the Greek file is renamed to Ellinika (2).mp3.')
-    ],y,[WIDTH*.46,WIDTH*.54],[82])
-    note(c,'Before a large rename','Run <b>--dry-run</b> first, back up important files, and close players, editors or sync programs using the folder.',y,height=83)
-    c.showPage()
-
-
-def p7(c):
-    y=body_page(c,7,'06 / Undo and recovery','The program stores original and new relative paths in a dated CSV log after you confirm renaming.')
-    y=section(c,'How to restore original filenames',y)
-    y=bullet(c,['Keep the original CSV file produced by the renaming run.',
-                'Open Command Prompt or PowerShell where the Python script is located.',
-                'Provide both the selected folder path and the CSV log path as shown below.',
-                'Type <b>UNDO</b> at the confirmation prompt.'],y)
-    y=code(c,['py rename_greek_to_greeklish.py --path "D:\\Music"',
-              '  --undo "D:\\Music\\greeklish_rename_log_...csv"'],y,84)
-    y=section(c,'What undo does and does not do',y)
-    y=bullet(c,['Recorded changes are restored in reverse order, allowing renamed parent folders to be restored before their contents.',
-                'If an original path is already occupied, that item is skipped rather than overwritten.',
-                'Missing files, additional manual moves, and unrelated edits cannot be reliably undone from the CSV.',
-                'Undo logs contain filenames/paths; check them before sharing publicly.'],y)
-    note(c,'Keep the CSV','Do not delete the log until you have verified the renamed files and no longer need to restore their original names.',y,height=81)
-    c.showPage()
-
-
-def p8(c):
-    y=body_page(c,8,'07 / Command-line reference','The supplied Windows launcher handles normal interactive use. Python command-line options support more precise or repeatable runs.')
-    y=table(c,['OPTION','EFFECT'],[
-       ('--path "FOLDER"','Select a directory without the initial folder prompt.'),
-       ('--recursive','Include subdirectories without asking.'),
-       ('--no-recursive','Scan the selected folder only.'),
-       ('--files-only','Keep folder names unchanged while scanning files.'),
-       ('--dry-run','Show proposed changes without renaming anything.'),
-       ('--yes','Skip the confirmation prompt; use carefully.'),
-       ('--undo "CSV"','Restore from a previous CSV log.'),
-       ('--help / --version','Display command help or version information.'),
-    ],y,[156,WIDTH-156],[42]*8)
-    y=section(c,'Read-only preview',y)
-    y=code(c,['py rename_greek_to_greeklish.py --path "D:\\Music"','  --no-recursive --dry-run'],y,82)
-    note(c,'Power users','When neither --recursive nor --no-recursive is given, the program asks the subdirectory question even if --path is supplied.',y,height=82)
-    c.showPage()
-
-
-def p9(c):
-    y=body_page(c,9,'08 / Troubleshooting','Most issues can be resolved by checking the selected folder, Python availability, file permissions or the preview output.')
-    y=table(c,['SYMPTOM','WHAT TO CHECK'],[
-       ('Python not found','Install Python 3.10+; try py -3 or python in Command Prompt.'),
-       ('Nothing proposed','Check the path, Greek letters in names, and whether subfolders were included.'),
-       ('File in use / access denied','Close applications using the files and verify folder permissions.'),
-       ('Unexpected (2) suffix','Another item already uses the intended Latin filename.'),
-       ('Undo skips an item','Original path is occupied or the renamed file has been moved/missing.'),
-       ('Words look unusual','Simplified transliteration differs from some preferred personal spellings.'),
-    ],y,[170,WIDTH-170],[49,55,54,49,56,55])
-    y=section(c,'Project information',y)
-    y=para(c,'<b>Created by Dimitris Laidis</b><br/>Version 1.2.1 · Python 3.10+ · MIT License<br/>github.com/DimitrisLai/Greek-to-greeklish-renamer',y,size=9.8,leading=18)-15
-    note(c,'Reporting an issue','Use GitHub Issues and include the version, Python/Windows version, exact message and a small example with invented filenames. Avoid sharing personal paths or full music libraries.',y,height=94)
-    c.showPage()
-
-
-def generate(output):
-    init_fonts();output=Path(output);output.parent.mkdir(parents=True,exist_ok=True)
-    c=canvas.Canvas(str(output),pagesize=A4,pageCompression=1)
-    c.setAuthor('Dimitris Laidis')
-    c.setTitle('Greek to Greeklish Renamer - Complete User Manual v1.2.1')
-    c.setSubject('Public software manual: usage, controls, safety, undo, and troubleshooting')
-    cover(c)
-    for fn in (p2,p3,p4,p5,p6,p7,p8,p9):fn(c)
+    # Page 10
+    y=title(c,9,'Project information','Release details, support channels and responsible use.')
+    y=table(c,['ITEM','DETAIL'],[
+       ('Project','Greek to Greeklish Renamer'),
+       ('Release','v2.0.0 — Desktop UI'),
+       ('Author','Dimitris Laidis / GitHub: DimitrisLai'),
+       ('License','MIT (source code); dependencies keep their respective terms'),
+       ('Source runtime','Python 3.10+, standard library (Tkinter)'),
+       ('Windows build','Standalone, installer-free EXE packaged using PyInstaller'),
+       ('Repository',REPO),
+       ('Support','GitHub Issues (use fictional example filenames)')
+    ],y,[156,CW-156],size=9.1)
+    y=section(c,'What is different in version 2.0.0?',y)
+    y=bullets(c,[
+       'New Windows-style graphical interface with folder browsing and a readable rename table.',
+       'Separate controls for recursive scanning and Greek folder renaming.',
+       'Read-only CSV preview export and CSV-based undo directly in the GUI.',
+       'Extra protection against applying a stale rename preview.',
+       'Existing command-line program, transliteration logic and previous safety rules retained.'
+    ],y)
+    y=note(c,'Privacy and responsible use','The application operates locally. It does not upload filenames or file data. Keep separate backups, verify previews and avoid posting private folder paths in public issue reports.',y)
+    check(y,'project page');c.showPage()
     c.save()
-    return output
+    print(out)
 
 
 if __name__=='__main__':
-    ap=argparse.ArgumentParser();ap.add_argument('--output',type=Path,required=True)
-    args=ap.parse_args();print(generate(args.output))
+    p=argparse.ArgumentParser()
+    p.add_argument('--output',type=Path,required=True)
+    a=p.parse_args()
+    make(a.output)

@@ -1,0 +1,148 @@
+name: Publish v2.0.0 Windows desktop release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-v2.0.0.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tests:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.10', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m unittest discover -s tests -v
+      - run: python greeklish_gui.py --self-test
+
+  manual:
+    name: Build and validate 10-page PDF manual
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install build tools and fonts
+        run: |
+          python -m pip install reportlab pypdf
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-lato fonts-dejavu-core
+      - name: Build PDF
+        run: |
+          mkdir -p dist
+          python docs/generate_manual.py --output dist/Greek_to_Greeklish_Renamer_User_Manual_v2.0.0_Dimitris_Laidis.pdf
+          python - <<'PY'
+          from pypdf import PdfReader
+          p='dist/Greek_to_Greeklish_Renamer_User_Manual_v2.0.0_Dimitris_Laidis.pdf'
+          pdf=PdfReader(p)
+          assert len(pdf.pages) == 10, f'Incorrect page count: {len(pdf.pages)}'
+          assert pdf.metadata.author == 'Dimitris Laidis'
+          for i,page in enumerate(pdf.pages):
+              assert page.extract_text().strip(), f'Empty PDF page {i+1}'
+          print('Validated 10-page release PDF')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: public-pdf
+          path: dist/*.pdf
+          if-no-files-found: error
+
+  executable:
+    name: Build and smoke-test native Windows EXE
+    needs: tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install PyInstaller (build dependency only)
+        run: python -m pip install "pyinstaller>=6.15,<7"
+      - name: Build standalone GUI EXE
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name GreeklishRenamer greeklish_gui.py
+      - name: Windows frozen EXE smoke test (rename + undo)
+        shell: pwsh
+        run: |
+          $exe = (Resolve-Path 'dist/GreeklishRenamer.exe').Path
+          $p = Start-Process -FilePath $exe -ArgumentList '--self-test' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Smoke test failed (exit $($p.ExitCode))" }
+          Write-Host "Executable smoke test passed."
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-executable
+          path: dist/GreeklishRenamer.exe
+          if-no-files-found: error
+
+  release:
+    name: Publish and verify v2.0.0 assets
+    needs: [tests, manual, executable]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@v4
+        with:
+          name: public-pdf
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-executable
+          path: dist
+      - name: Archive new manual in the repository
+        run: |
+          cp dist/Greek_to_Greeklish_Renamer_User_Manual_v2.0.0_Dimitris_Laidis.pdf docs/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/Greek_to_Greeklish_Renamer_User_Manual_v2.0.0_Dimitris_Laidis.pdf
+          if ! git diff --cached --quiet; then
+            git commit -m "docs: add v2.0.0 desktop user manual"
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
+          fi
+      - name: Build and validate release ZIPs
+        run: |
+          python docs/build_release.py --output dist --exe dist/GreeklishRenamer.exe
+          python - <<'PY'
+          import zipfile
+          from pathlib import Path
+          for path in Path('dist').glob('*.zip'):
+              with zipfile.ZipFile(path) as z:
+                  assert z.testzip() is None
+                  assert any(n.endswith('.pdf') for n in z.namelist())
+                  if '-Windows-' in path.name:
+                      assert 'GreeklishRenamer.exe' in z.namelist()
+              print('Verified ZIP:', path)
+          PY
+      - name: Publish final GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v2.0.0 >/dev/null 2>&1; then
+            gh release upload v2.0.0 dist/*.zip dist/*.pdf --clobber
+            gh release edit v2.0.0 --notes-file RELEASE_NOTES.md
+          else
+            gh release create v2.0.0 dist/*.zip dist/*.pdf \
+              --target "$(git rev-parse HEAD)" \
+              --title "Greek to Greeklish Renamer v2.0.0 — Windows Desktop" \
+              --notes-file RELEASE_NOTES.md --latest
+          fi
+          gh release view v2.0.0 --json tagName,assets --jq '{tag: .tagName,assets: [.assets[].name]}'

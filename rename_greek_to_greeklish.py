@@ -17,9 +17,8 @@ import unicodedata
 from datetime import datetime
 from pathlib import Path
 
-# Ensure filenames containing Greek characters can be printed safely even when a
-# Windows terminal or redirected PowerShell session starts with cp1252 output.
-# This must also work when the script is imported by another Python program.
+# Windows terminal and redirected PowerShell output can default to cp1252,
+# which cannot print Greek names. Explicitly choose Unicode-safe output.
 def _configure_unicode_console() -> None:
     for stream in (sys.stdout, sys.stderr):
         reconfigure = getattr(stream, "reconfigure", None)
@@ -32,7 +31,7 @@ def _configure_unicode_console() -> None:
 
 _configure_unicode_console()
 
-VERSION = "1.2.1"
+VERSION = "2.0.0"
 
 # Modern Greek -> ASCII transcription, inspired by ELOT 743 / ISO 843.
 # This is NOT a certified, fully reversible implementation: accents are removed.

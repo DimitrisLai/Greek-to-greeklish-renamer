@@ -1,87 +1,81 @@
 # Greek to Greeklish Renamer
 
-**Safely convert Greek filenames and folder names into Greeklish.**
+**A safe Windows desktop app for converting Greek filenames and folder names to Greeklish.**
 
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 [![MIT License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Python tests](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/actions/workflows/tests.yml/badge.svg)](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/actions/workflows/tests.yml)
 
-
-**Created by [Dimitris Laidis](https://github.com/DimitrisLai)** · Version **1.2.1** · MIT License
-
-A lightweight command-line utility for Windows and other platforms running Python 3.10+. No additional Python packages are needed to run the application.
+**Version 2.0.0 · Created by Dimitris Laidis · MIT License**
 
 ## Download
 
-**[Latest GitHub Release — Windows ZIP, Source ZIP & PDF User Manual](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/latest)**
+**[Download the latest Windows ZIP, complete source ZIP and professional PDF manual](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/latest)**
 
-- **Windows ZIP**: the Python script, double-click launcher, license, author credit and public PDF manual.
-- **PDF User Manual**: redesigned 9-page manual with a professional cover and step-by-step instructions covering folder selection, subdirectories, examples, safe renaming, undo and troubleshooting.
-- **Source ZIP**: source code, documentation, tests and license.
-- The manual is also kept under [docs](docs/) in this repository after the release build completes.
+The **Windows ZIP** contains `GreeklishRenamer.exe` (no Python required), `README_FIRST.txt`, `LICENSE`, and the user manual. **Extract the ZIP before running the EXE.** The Source ZIP includes the GUI, original CLI, tests and documentation. The app runs locally: no accounts, ads, telemetry, uploads or network lookups.
 
-> Extract the ZIP before running the Windows launcher. Python 3.10 or later must be installed.
+## Windows desktop interface
 
-## What the application does
+- **Choose a directory** with a folder picker, or paste a folder path.
+- **Include subdirectories** when needed. Off by default.
+- Independently choose whether to **rename Greek folder names**. Disabled unless scanning subdirectories.
+- **Only rename names with Greek characters**; English-only or existing Greeklish names are skipped.
+- **Preview changes** in a table before committing anything.
+- **Export the preview to CSV** without changing files.
+- **Apply with confirmation**; reject stale plans when the folder's contents change after Preview.
+- Prevent collisions with numbered suffixes such as `(2)` and `(3)`.
+- **Undo from CSV** using the log generated during the rename; require exact `UNDO` confirmation.
+- Skip symlinks, junctions and Windows reparse points. Preserve file contents.
 
-- Prompts you to choose a directory when it starts (press Enter for the script's own folder).
-- Asks whether to include subdirectories; the default is **No**.
-- **Only touches names containing Greek characters.** English/Greeklish-only filenames remain unchanged.
-- Optionally converts Greek folder names when scanning subdirectories.
-- Shows a full preview and requires you to type **YES** before applying changes.
-- Avoids overwriting other files: filename conflicts get suffixes such as `(2)` or `(3)`.
-- Skips symbolic links and Windows junction/reparse points.
-- Logs completed changes in a CSV to support undo; changes are to **names**, never file contents.
+### First use
 
-| Original name | Result |
-| --- | --- |
+1. Download the [v2.0.0 Windows ZIP](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.0.0) and extract it.
+2. Double-click **GreeklishRenamer.exe**.
+3. Click **Browse…** and choose a small folder to test.
+4. Leave subdirectories off initially. Click **Preview changes**.
+5. Review the before/after names; click **Apply renames** only when satisfied.
+6. Keep the dated undo CSV log in that directory until you verify the results.
+
+**Before large renames, back up important files independently.** Playlists and programs referencing old paths may need updating. Undo is best-effort if paths were moved or changed after a run.
+
+## Examples
+
+| Original filename | New filename |
+|---|---|
 | Γιώργος Μαζωνάκης.mp3 | Giorgos Mazonakis.mp3 |
 | Δημήτρης Κόκοτας.flac | Dimitris Kokotas.flac |
 | DJ Set - Ελληνικά.mp3 | DJ Set - Ellinika.mp3 |
-| English Song.mp3 | Unchanged |
+| English Song.mp3 | *(unchanged)* |
 
-*Note:* The conversion uses simplified ELOT 743 / ISO 843-inspired ASCII rules. It is **not** exact or certified standard-compliant transliteration.
+Transcription uses simplified **ELOT 743 / ISO 843-inspired ASCII** rules, not fully compliant or certified romanization. Familiar spellings of personal names can vary.
 
-## How to run
+## Python source version
 
-1. Extract the Windows ZIP and keep the two program files together.
-2. Double-click `Run_Greek_to_Greeklish.cmd`.
-3. Enter the directory you want to process.
-4. Answer the subdirectory question.
-5. Review the changes and type `YES` to proceed.
-
-You can also use Python directly:
+Requires Python 3.10+ and the standard library (including Tkinter); no `pip install` is needed to run the application.
 
 ```powershell
-py rename_greek_to_greeklish.py
+py greeklish_gui.py                 # Launch the desktop interface
+py greeklish_gui.py --self-test     # Noninteractive filesystem smoke test
+py rename_greek_to_greeklish.py     # Original interactive CLI
 py rename_greek_to_greeklish.py --path "D:\Music" --no-recursive --dry-run
-py rename_greek_to_greeklish.py --path "D:\Music" --recursive
 py rename_greek_to_greeklish.py --path "D:\Music" --recursive --files-only
-```
-
-### Undo changes
-
-Keep the CSV created in the selected folder, then run:
-
-```powershell
 py rename_greek_to_greeklish.py --path "D:\Music" --undo "D:\Music\greeklish_rename_log_...csv"
 ```
 
-Type `UNDO` when prompted. Missing or conflicting paths are skipped rather than overwritten. Back up important folders before bulk renaming: playlists and applications may still refer to old paths.
+The original `Run_Greek_to_Greeklish.cmd` remains for console users. `Run_Greeklish_Renamer_UI.cmd` launches the GUI from the source edition.
 
-## Automated testing
+## Testing
 
 ```powershell
 py -m unittest discover -s tests -v
 ```
 
-The automated suite covers Windows Unicode output, transliteration, Greek-only filtering, folder selection, recursive and nonrecursive scanning, filename conflicts, safety and undo. GitHub Actions runs checks on Windows and Linux.
+GitHub Actions runs regression tests on **Windows and Linux** using **Python 3.10 and 3.13**. The release workflow builds a Windows EXE using PyInstaller and runs a noninteractive EXE smoke test. A person should still test opening the GUI and renaming a small folder on an actual Windows desktop.
 
-## Documentation, author and license
+## Documentation and support
 
-- **Public user manual:** attached to [GitHub Releases](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases).
-- [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [License](LICENSE)
-- **Author:** Dimitris Laidis ([DimitrisLai](https://github.com/DimitrisLai))
-- **License:** MIT, copyright © 2026 Dimitris Laidis.
+- [PDF User Manual — v2.0.0](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.0.0) (included with the Windows ZIP)
+- [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [MIT License](LICENSE)
+- [Report an issue](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/issues) using fictional filenames and nonsensitive paths
 
-Greek romanization references: [ELOT](https://eshop.elot.gr/en/product/70972), [Greek Passport Authority](https://passport.gov.gr/passports/GrElotConverter/GrElotConverterEn.html).
+Copyright © 2026 **Dimitris Laidis**. Licensed under the MIT License. Source: [GitHub](https://github.com/DimitrisLai/Greek-to-greeklish-renamer).

@@ -1,15 +1,21 @@
 # Changelog
 
-## 1.2.1 (2026-10-18)
+## [2.0.0] — 2026-10-21
+
+- Added a complete Windows desktop user interface, using Tkinter with zero runtime dependencies.
+- Released a standalone Windows EXE built by PyInstaller and tested with a headless rename/undo smoke test.
+- Added independent subdirectory and folder-name rename controls.
+- Added a preview table, progress/status feedback, CSV preview export and undo from CSV.
+- Added a stale-preview safety check before applying changes.
+- Added testable UI service layer and extra regression cases (previous CLI functions retained).
+- Rebuilt the public manual and release packaging for the new GUI and CLI editions.
+
+## [1.2.1] — 2026-10-18
 - Fixed Unicode output on Windows terminals that default to cp1252.
-- Added a regression test for Greek filenames with a cp1252 output setting.
-- Updated PDF manual and release ZIPs to match the latest Windows-compatible version.
+- Added Windows regression checks and updated published PDF documentation.
 
-## 1.2.0 (2026-10-18)
-- Directory selection at startup, optional subdirectories.
-- Preview, confirmation, Greek-only filters, collision protection and CSV undo.
-- Windows launcher and tests.
-- Hardened junction/reparse point traversal.
+## [1.2.0] — 2026-10-18
+- Added directory selection, optional subdirectories, collision-safe renaming, preview and CSV undo.
 
-## 1.1.0 (2026-10-18)
-- Subdirectory question and Greek-character detection.
+## [1.1.0] — 2026-10-18
+- Added subdirectory question and Greek-character detection.

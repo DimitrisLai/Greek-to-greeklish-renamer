@@ -1,33 +1,17 @@
-# Publishing and maintenance
+# Publishing Windows Desktop Edition
 
-**Project:** https://github.com/DimitrisLai/Greek-to-greeklish-renamer
+This repository automatically tests Python 3.10 and 3.13 on Windows and Linux via `.github/workflows/tests.yml`.
 
-**Author:** Dimitris Laidis
+The one-time **v2.0.0** release workflow `.github/workflows/release-v2.0.0.yml` builds a native Windows EXE with PyInstaller on Windows, tests the EXE via `--self-test`, generates a 10-page PDF on Linux, then publishes the ZIPs and PDF into the GitHub Release. It also publishes a copy of the PDF to `docs/` on `main`.
 
-## Public release
+## Public release assets
 
-The repository includes a one-time GitHub Actions workflow under `.github/workflows/publish-v1.2.1.yml`. The workflow:
+- `Greeklish-Renamer-v2.0.0-Windows-Dimitris-Laidis.zip` — EXE + PDF + license + README_FIRST.
+- `Greeklish-Renamer-v2.0.0-Source-Dimitris-Laidis.zip` — sources + tests + docs + PDF.
+- `Greek_to_Greeklish_Renamer_User_Manual_v2.0.0_Dimitris_Laidis.pdf` — public manual.
 
-1. Tests the Python application on Ubuntu.
-2. Generates the four-page public PDF user manual.
-3. Builds the Windows ZIP and source ZIP.
-4. Creates the v1.2.1 GitHub Release or replaces existing release assets.
-5. Publishes downloadable ZIP and PDF assets to GitHub Releases. The current manual is also archived in `docs/`.
+## Prepare any future version
 
-The release includes three assets: the Windows ZIP, the source ZIP, and the user manual PDF.
+Update the version in Python files, changelog, README, release notes, PDF generator, build script, Windows launchers and release workflow. Create an **independent new release workflow** for a new tag, or convert this single-version workflow to an explicitly parameterized one. Do **not** overwrite an existing historical release tag as if it were a new version.
 
-The source ZIP is **not** a compiled executable: users need Python 3.10+ to run the program.
-
-## Search topics
-
-`greeklish`, `greek`, `transliteration`, `elot-743`, `python`, `file-renamer`, `batch-rename`, `windows`, `unicode`, `cli`.
-
-Repository Topics require owner/admin settings access. Add them manually with the gear icon in the repository's **About** section. The automatic workflow does not change repository Topics.
-
-## Future releases
-
-For maintenance, use v1.2.1 for fixes, v1.3.0 for compatible feature additions, and v2.0.0 for breaking changes. Update versions in the Python script, manual generator, build script, release workflow, README and changelog.
-
-## Testing
-
-Run `python -m unittest discover -s tests -v` locally. Ensure GitHub Actions checks pass before tagging the next public version.
+The application has no runtime pip dependencies. `reportlab`, `pypdf` and `pyinstaller` are **build-only** tools. GitHub user-facing topics are configured in repository settings.
