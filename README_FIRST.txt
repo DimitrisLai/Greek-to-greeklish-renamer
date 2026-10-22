@@ -1,4 +1,4 @@
-GREEK TO GREEKLISH RENAMER v2.1.1
+GREEK TO GREEKLISH RENAMER v2.1.2
 Created by Dimitris Laidis | MIT License
 
 WINDOWS DESKTOP APP (no Python needed)
@@ -32,3 +32,6 @@ https://github.com/DimitrisLai/Greek-to-greeklish-renamer
 Custom edits are filename-only; the app will refuse collisions and unsafe Windows names.
 If you untick a file inside a folder that is also selected to rename, untick
 that parent folder too, so the excluded file's location remains unchanged.
+
+NEW IN v2.1.2: Search/filter proposed filenames; edit names with extensions protected by default; Stop safely between renames; see a complete Results report with an automatically saved CSV.
+Do not close the window while renames are running. Use Stop safely instead. Undo logs include completed changes only.

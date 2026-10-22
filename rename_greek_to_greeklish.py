@@ -15,6 +15,7 @@ import stat
 import sys
 import unicodedata
 from datetime import datetime
+from typing import Callable
 from pathlib import Path
 
 # Windows terminal and redirected PowerShell output can default to cp1252,
@@ -31,7 +32,7 @@ def _configure_unicode_console() -> None:
 
 _configure_unicode_console()
 
-VERSION = "2.1.1"
+VERSION = "2.1.2"
 
 # Modern Greek -> ASCII transcription, inspired by ELOT 743 / ISO 843.
 # This is NOT a certified, fully reversible implementation: accents are removed.
@@ -311,7 +312,8 @@ def choose_recursion() -> bool:
         print("Please type Y or N.")
 
 
-def apply_plan(root: Path, plan: list[tuple[Path, Path]], *, progress_callback=None) -> tuple[int, Path]:
+def apply_plan(root: Path, plan: list[tuple[Path, Path]], *, progress_callback=None,
+               result_callback=None, stop_requested: Callable[[], bool] | None = None) -> tuple[int, Path]:
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     logfile = root / f"greeklish_rename_log_{stamp}.csv"
     renamed = 0
@@ -319,26 +321,42 @@ def apply_plan(root: Path, plan: list[tuple[Path, Path]], *, progress_callback=N
         writer = csv.writer(handle)
         writer.writerow(["old_relative_path", "new_relative_path"])
         handle.flush()
-        for completed, (old, new) in enumerate(plan, start=1):
+        completed = 0
+        for old, new in plan:
+            # A stop is honored ONLY between filesystem operations. Never kill
+            # an in-flight rename or leave its CSV undo entry unwritten.
+            if stop_requested is not None and stop_requested():
+                break
+            status, reason = 'renamed', ''
             try:
                 if not is_occupied(old):
+                    status, reason = 'skipped', 'Source no longer exists'
                     print(f"[SKIP] Source missing: {old}")
-                    continue
-                if is_occupied(new):
+                elif is_occupied(new):
+                    status, reason = 'skipped', 'Destination is already occupied'
                     print(f"[SKIP] Destination taken: {new}")
-                    continue
-                try:
-                    old.rename(new)
-                    writer.writerow([str(old.relative_to(root)), str(new.relative_to(root))])
-                    handle.flush()
-                    renamed += 1
-                except OSError as exc:
-                    print(f"[ERROR] {old.name}: {exc}")
+                else:
+                    try:
+                        old.rename(new)
+                        writer.writerow([str(old.relative_to(root)), str(new.relative_to(root))])
+                        handle.flush()
+                        renamed += 1
+                    except OSError as exc:
+                        status, reason = 'failed', f'{type(exc).__name__}: {exc}'
+                        print(f"[ERROR] {old.name}: {exc}")
             finally:
-                # Count processed operations even when a file was skipped.
-                # The callback never changes the rename decision or CSV log.
+                completed += 1
+                if result_callback is not None:
+                    try:
+                        result_callback(old, new, status, reason)
+                    except Exception as exc:
+                        # A reporting callback cannot interrupt renaming.
+                        print(f"[WARN] Result reporting failed: {exc}")
                 if progress_callback is not None:
-                    progress_callback(completed, len(plan), renamed)
+                    try:
+                        progress_callback(completed, len(plan), renamed)
+                    except Exception as exc:
+                        print(f"[WARN] Progress reporting failed: {exc}")
     return (renamed, logfile)
 
 

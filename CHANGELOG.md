@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.1] — 2026-10-22
+## [2.1.2] — 2026-10-22
 
 - Replaced the two bulk-selection buttons with one dynamic **Select All / Select None** toggle.
 - Replaced font-dependent checkboxes with a visible per-row checkbox image in the INCLUDE column.

@@ -27,7 +27,8 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from renamer_service import (InvalidSelectionError, PreviewChangedError, RenamePreview,
-                             create_preview, execute_preview, restore_log,
+                             RenameReport, create_preview, execute_preview,
+                             execute_preview_report, restore_log,
                              validate_new_filename, validate_selection)
 from rename_greek_to_greeklish import VERSION
 
@@ -63,7 +64,125 @@ def check_headless_build() -> int:
         count, total = restore_log(root, log)
         if (count, total) != (1, 1) or original.read_bytes() != b'unchanged media bytes' or not skipped.is_file():
             return 13
+    # Headless frozen EXE also tests the new stop/report behavior.
+    with tempfile.TemporaryDirectory(prefix='greeklish-gui-stop-test-') as folder:
+        root = Path(folder)
+        for number in range(12):
+            (root / f'Αρχείο {number:02d}.mp3').write_bytes(bytes([number]))
+        preview = create_preview(root, recursive=False, rename_folders=False)
+        stop = threading.Event()
+        def advance(done, total, renamed):
+            if done == 4:
+                stop.set()
+        result = execute_preview_report(preview, preview.operations,
+                          stop_requested=stop.is_set, progress_callback=advance)
+        if (result.renamed_count, result.remaining_count, result.stopped) != (4, 8, True):
+            return 14
+        if result.report_file is None or not result.report_file.is_file():
+            return 15
+        if restore_log(root, result.log) != (4,4):
+            return 16
     return 0
+
+
+class EditNameDialog(simpledialog.Dialog):
+    """A text editor with file extension protection enabled by default."""
+    def __init__(self, parent, source: Path, proposed: str, override=False):
+        self.source = source
+        self.proposed = proposed
+        self.existing_override = override
+        self.result = None
+        super().__init__(parent, title='Edit proposed name')
+
+    def body(self, master):
+        ttk.Label(master, text=f'Original: {self.source.name}', wraplength=480).pack(anchor='w', pady=(4, 12))
+        ttk.Label(master, text='Proposed filename / folder name:').pack(anchor='w')
+        self.name_var = tk.StringVar(value=self.proposed)
+        self.name_entry = ttk.Entry(master, textvariable=self.name_var, width=57)
+        self.name_entry.pack(fill='x', pady=(4, 8))
+        self.allow_var = tk.BooleanVar(value=self.existing_override)
+        if self.source.is_file():
+            self.advanced = ttk.Checkbutton(master,
+                text='Allow file extension change (advanced)', variable=self.allow_var)
+            self.advanced.pack(anchor='w')
+            ttk.Label(master, text=f'Protected extension: {self.source.suffix or "(none)"}. '
+                       'Keep the extension unchanged unless explicitly enabled.',
+                       foreground=MUTED, wraplength=480).pack(anchor='w', pady=(8, 4))
+        else:
+            self.allow_var.set(True)
+            ttk.Label(master, text='Folder names can include periods.',
+                      foreground=MUTED).pack(anchor='w', pady=(6, 4))
+        return self.name_entry
+
+    def validate(self):
+        try:
+            validate_new_filename(self.name_var.get(), original=self.source.name,
+                                  allow_extension_change=self.allow_var.get())
+            return True
+        except InvalidSelectionError as exc:
+            messagebox.showerror('Invalid name', str(exc), parent=self)
+            return False
+
+    def apply(self):
+        self.result = self.name_var.get(), self.allow_var.get()
+
+
+class ResultsDialog(tk.Toplevel):
+    """Read-only per-item results, automatically saved beside the undo log."""
+    def __init__(self, parent, report: RenameReport):
+        super().__init__(parent)
+        self.report = report
+        self.title('Rename results — Greek to Greeklish Renamer')
+        self.geometry('940x520')
+        self.minsize(710, 380)
+        self.configure(bg=PAPER)
+        self.transient(parent)
+        main = tk.Frame(self, bg=PAPER, padx=18, pady=15)
+        main.pack(fill='both', expand=True)
+        heading = ('Stopped safely' if report.stopped else
+                   'Completed with issues' if report.failed_count or report.skipped_count else 'Completed')
+        tk.Label(main, text=heading, font=(FONT, 15, 'bold'), bg=PAPER, fg=NAVY).pack(anchor='w')
+        summary = (f'{report.renamed_count:,} renamed   •   {report.skipped_count:,} skipped   •   '
+                   f'{report.failed_count:,} failed   •   {report.excluded_count:,} excluded   •   '
+                   f'{report.remaining_count:,} not processed')
+        tk.Label(main, text=summary, font=(FONT, 10), bg=PAPER, fg=TEXT).pack(anchor='w', pady=(8, 12))
+        wrap = tk.Frame(main, bg=WHITE)
+        wrap.pack(fill='both', expand=True)
+        tree = ttk.Treeview(wrap, show='headings', columns=('status','old','new','reason'),
+                            style='Greek.Treeview')
+        for key, title, width in [('status','RESULT',110), ('old','ORIGINAL',240),
+                                  ('new','DESTINATION',240),('reason','DETAIL / REASON',280)]:
+            tree.heading(key, text=title)
+            tree.column(key, width=width, minwidth=85, stretch=key!='status')
+        tree.pack(side='left', fill='both', expand=True)
+        sb = ttk.Scrollbar(wrap, orient='vertical', command=tree.yview)
+        sb.pack(side='right', fill='y')
+        tree.configure(yscrollcommand=sb.set)
+        for row in report.rows:
+            tree.insert('', 'end', values=(row.status.upper(),
+                      str(row.old.relative_to(report.root)),
+                      str(row.new.relative_to(report.root)),row.reason))
+        tk.Label(main, bg=PAPER, fg=MUTED, anchor='w',
+                 text=f'Undo log: {report.log}').pack(anchor='w', pady=(10, 1))
+        tk.Label(main, bg=PAPER, fg=MUTED, anchor='w',
+                 text=f'Results CSV: {report.report_file or "Could not automatically save (use Export)"}').pack(anchor='w')
+        buttons = tk.Frame(main, bg=PAPER)
+        buttons.pack(fill='x', pady=(10, 0))
+        tk.Button(buttons, text='Export report CSV…', command=self.export,
+                  font=(FONT, 10, 'bold'), padx=12, pady=8).pack(side='left')
+        tk.Button(buttons, text='Close', command=self.destroy,
+                  font=(FONT, 10, 'bold'), padx=12, pady=8).pack(side='right')
+        self.protocol('WM_DELETE_WINDOW', self.destroy)
+        self.grab_set()
+
+    def export(self):
+        path = filedialog.asksaveasfilename(parent=self, defaultextension='.csv',
+                  initialfile='greeklish_result_report.csv', filetypes=[('CSV files','*.csv')])
+        if path:
+            try:
+                self.report.export_csv(Path(path))
+            except OSError as exc:
+                messagebox.showerror('Export failed', str(exc), parent=self)
 
 
 class GreeklishWindow:
@@ -82,6 +201,7 @@ class GreeklishWindow:
         self.recursive = tk.BooleanVar(value=False)
         self.rename_folders = tk.BooleanVar(value=False)
         self.filter_text = tk.StringVar()
+        self.view_filter = tk.StringVar(value='All')
         self.summary = tk.StringVar(value='Select a folder and click Preview changes.')
         self.counter = tk.StringVar(value='0 proposed changes')
         self.state = tk.StringVar(value='READY')
@@ -91,6 +211,9 @@ class GreeklishWindow:
         self.current_preview: RenamePreview | None = None
         self.checked: dict[int, bool] = {}
         self.manual_targets: dict[int, Path] = {}
+        self.extension_overrides: set[int] = set()
+        self.stop_event = threading.Event()
+        self.current_operation = None
         self.last_log: Path | None = None
         self.processing = False
         self.messages: queue.Queue = queue.Queue()
@@ -99,6 +222,7 @@ class GreeklishWindow:
         self.checkbox_no = self._checkbox_icon(False)
         self._layout()
         self._bind_events()
+        self.root.protocol('WM_DELETE_WINDOW', self._on_close)
         self.root.after(80, self._drain_messages)
 
     def _configure_style(self):
@@ -164,6 +288,7 @@ class GreeklishWindow:
                          highlightbackground=BORDER, highlightcolor=TEAL,
                          highlightthickness=1)
         entry.pack(side='left', fill='x', expand=True, ipady=9)
+        self.folder_entry = entry
         self.browse_btn = self._button(folderrow, 'Browse…', self._browse, width=10)
         self.browse_btn.pack(side='left', padx=(10, 0))
 
@@ -187,6 +312,20 @@ class GreeklishWindow:
                  font=(FONT, 10, 'bold')).pack(side='right')
         self.toggle_btn = self._button(heading, 'Select None', self._toggle_all, width=13)
         self.toggle_btn.pack(side='right', padx=(0, 12))
+
+        searchrow = tk.Frame(frame, bg=PAPER)
+        searchrow.pack(fill='x', pady=(0, 10))
+        tk.Label(searchrow, text='Find:', bg=PAPER, fg=NAVY,
+                 font=(FONT, 9, 'bold')).pack(side='left', padx=(0, 7))
+        self.search_entry = ttk.Entry(searchrow, textvariable=self.filter_text, width=38)
+        self.search_entry.pack(side='left', fill='x', expand=True)
+        tk.Label(searchrow, text='Show:', bg=PAPER, fg=NAVY,
+                 font=(FONT, 9, 'bold')).pack(side='left', padx=(14, 8))
+        self.filter_combo = ttk.Combobox(searchrow, textvariable=self.view_filter,
+              values=('All', 'Included', 'Excluded', 'Edited'), state='readonly', width=12)
+        self.filter_combo.pack(side='left')
+        tk.Label(searchrow, text='Filtering does not change selections', bg=PAPER,
+                 fg=MUTED, font=(FONT, 8)).pack(side='left', padx=(12, 0))
 
         tablewrap = tk.Frame(frame, bg=WHITE, highlightthickness=1, highlightbackground=BORDER)
         tablewrap.pack(fill='both', expand=True)
@@ -244,6 +383,8 @@ class GreeklishWindow:
         self.export_btn.pack(side='left', padx=(9, 0))
         self.undo_btn = self._button(buttons, 'Undo from CSV', self._undo, width=14)
         self.undo_btn.pack(side='right')
+        self.stop_btn = self._button(buttons, 'Stop safely', self._request_stop, width=13)
+        self.stop_btn.pack(side='right', padx=(0, 9))
 
         footer = tk.Frame(self.root, bg='#E9F0F6', height=45)
         footer.pack(fill='x', side='bottom'); footer.pack_propagate(False)
@@ -261,6 +402,8 @@ class GreeklishWindow:
         self.tree.bind('<space>', self._keyboard_toggle)
         self.tree.bind('<<TreeviewSelect>>', lambda *_: self._sync_controls())
         self.rename_folders.trace_add('write', lambda *_: self._invalidate())
+        self.filter_text.trace_add('write', lambda *_: self._render_filtered_rows())
+        self.view_filter.trace_add('write', lambda *_: self._render_filtered_rows())
 
     def _change_recursion(self):
         if not self.recursive.get() and self.rename_folders.get():
@@ -271,6 +414,7 @@ class GreeklishWindow:
         self.current_preview = None
         self.checked.clear()
         self.manual_targets.clear()
+        self.extension_overrides.clear()
         self.tree.delete(*self.tree.get_children())
         self.counter.set('0 proposed changes')
         if not self.processing:
@@ -284,6 +428,7 @@ class GreeklishWindow:
             btn.configure(state=state)
         self.folder_check.configure(state='normal' if self.recursive.get() and not self.processing else 'disabled')
         self.rec_check.configure(state=state)
+        self.folder_entry.configure(state=state)
         has_preview = bool(self.current_preview and self.current_preview.count and not self.processing)
         may_apply = has_preview and any(self.checked.values())
         self.apply_btn.configure(state='normal' if may_apply else 'disabled')
@@ -292,6 +437,10 @@ class GreeklishWindow:
         self.toggle_btn.configure(state='normal' if has_preview else 'disabled')
         self.toggle_btn.configure(text='Select None' if has_preview and all(self.checked.values())
                                   else 'Select All')
+        self.stop_btn.configure(state='normal' if self.processing and self.current_operation == 'APPLY'
+                                and not self.stop_event.is_set() else 'disabled')
+        self.search_entry.configure(state='normal' if not self.processing else 'disabled')
+        self.filter_combo.configure(state='readonly' if not self.processing else 'disabled')
 
 
     def _display_name(self, index: int) -> Path:
@@ -311,7 +460,8 @@ class GreeklishWindow:
         total = self.current_preview.count
         checked = sum(self.checked.values())
         edited = len(self.manual_targets)
-        self.counter.set(f'{checked:,} selected / {total:,} proposed' +
+        visible = len(self.tree.get_children())
+        self.counter.set(f'{checked:,} selected / {total:,} proposed  •  {visible:,} shown' +
                          (f'  |  {edited} edited' if edited else ''))
         self._sync_controls()
 
@@ -320,7 +470,7 @@ class GreeklishWindow:
             return
         self.checked[index] = state
         self._refresh_row(index)
-        self._refresh_counter()
+        self._render_filtered_rows()
         self.summary.set('Only checked rows will be renamed. Unticked rows are skipped.')
 
     def _refresh_row(self, index: int):
@@ -332,11 +482,67 @@ class GreeklishWindow:
         tags = (('excluded',) if not self.checked[index] else
                 ('custom',) if index in self.manual_targets else
                 ('odd',) if index % 2 else ())
+        if not self.tree.exists(str(index)):
+            return
         self.tree.item(str(index), image=self.checkbox_yes if self.checked[index]
                        else self.checkbox_no, text='Yes' if self.checked[index] else 'No',
                        values=('Folder' if old.is_dir() else 'File',
                                str(old.relative_to(preview.root)),
                                str(new.relative_to(preview.root))), tags=tags)
+
+    def _matching_indices(self) -> list[int]:
+        preview = self.current_preview
+        if preview is None:
+            return []
+        search = self.filter_text.get().strip().casefold()
+        status = self.view_filter.get()
+        result = []
+        for i, (old, _) in enumerate(preview.operations):
+            if status == 'Included' and not self.checked.get(i, False):
+                continue
+            if status == 'Excluded' and self.checked.get(i, False):
+                continue
+            if status == 'Edited' and i not in self.manual_targets:
+                continue
+            if search and search not in str(old.relative_to(preview.root)).casefold() \
+                      and search not in str(self._display_name(i).relative_to(preview.root)).casefold():
+                continue
+            result.append(i)
+        return result
+
+    def _render_filtered_rows(self):
+        if self.processing:
+            return
+        selected_ids = set(self.tree.selection())
+        self.tree.delete(*self.tree.get_children())
+        for i in self._matching_indices():
+            iid = str(i)
+            self.tree.insert('', 'end', iid=iid, values=('', '', ''))
+            self._refresh_row(i)
+            if iid in selected_ids:
+                self.tree.selection_add(iid)
+        self._refresh_counter()
+
+    def _on_close(self):
+        if self.processing:
+            if self.current_operation == 'APPLY':
+                if messagebox.askyesno('Rename still running',
+                         'Renaming is in progress. Close is disabled to protect the undo log.\n\n'
+                         'Request a safe stop after the current file?', parent=self.root):
+                    self._request_stop()
+            else:
+                messagebox.showinfo('Please finish the operation',
+                     'A scan or restore operation is still running. The window will stay open.',
+                     parent=self.root)
+            return
+        self.root.destroy()
+
+    def _request_stop(self):
+        if not self.processing or self.current_operation != 'APPLY':
+            return
+        self.stop_event.set()
+        self.summary.set('Stop requested: finishing the current file and flushing the undo CSV…')
+        self._sync_controls()
 
     def _row_click(self, event):
         if self.processing or self.current_preview is None:
@@ -372,7 +578,7 @@ class GreeklishWindow:
         for i in self.checked:
             self.checked[i] = select_everything
             self._refresh_row(i)
-        self._refresh_counter()
+        self._render_filtered_rows()
         self.summary.set('All proposed changes selected.' if select_everything else
                          'Nothing selected. Tick individual rows to include them.')
 
@@ -384,36 +590,43 @@ class GreeklishWindow:
             return
         i = int(selection[0])
         old, automatic = self.current_preview.operations[i]
-        initial = self._display_name(i).name
         while True:
-            value = simpledialog.askstring('Edit proposed name',
-                        f'Original: {old.name}\n\nEdit the new NAME only (not the folder path).\n'
-                        'The file extension can also be edited.\n\nProposed name:',
-                        initialvalue=initial, parent=self.root)
-            if value is None:
+            editor = EditNameDialog(self.root, old, self._display_name(i).name,
+                                    i in self.extension_overrides)
+            if editor.result is None:
                 return
+            value, override = editor.result
             try:
-                validate_new_filename(value, original=old.name)
+                validate_new_filename(value, original=old.name,
+                                      allow_extension_change=override or old.is_dir())
                 new = old.with_name(value)
                 amended = dict(self.manual_targets)
+                overrides = set(self.extension_overrides)
                 if new == automatic:
                     amended.pop(i, None)
+                    overrides.discard(i)
                 else:
                     amended[i] = new
+                    if override and old.is_file():
+                        overrides.add(i)
+                    else:
+                        overrides.discard(i)
                 if self.checked.get(i, False):
                     proposals = ((source, amended.get(j, target))
                                  for j, (source, target) in enumerate(self.current_preview.operations)
                                  if self.checked.get(j, False))
-                    validate_selection(self.current_preview, proposals)
+                    sources_override = {self.current_preview.operations[j][0] for j in overrides}
+                    validate_selection(self.current_preview, proposals,
+                                       extension_overrides=sources_override)
                 self.manual_targets = amended
-                self._refresh_row(i)
-                self._refresh_counter()
+                self.extension_overrides = overrides
+                self._render_filtered_rows()
                 self.summary.set(f'Proposed name updated for {old.name}. Review before applying.')
-                self.tree.see(str(i))
+                if self.tree.exists(str(i)):
+                    self.tree.see(str(i))
                 return
             except (InvalidSelectionError, PreviewChangedError) as exc:
                 messagebox.showerror('Invalid filename', str(exc), parent=self.root)
-                initial = value
 
     def _browse(self):
         path = filedialog.askdirectory(parent=self.root, title='Choose folder to rename',
@@ -425,6 +638,7 @@ class GreeklishWindow:
         if self.processing:
             return
         self.processing = True
+        self.current_operation = label
         self.state.set(label)
         self.summary.set('Please wait…')
         self._sync_controls()
@@ -434,7 +648,7 @@ class GreeklishWindow:
                 self.messages.put(('success', label, result))
             except Exception as exc:  # relay to Tk thread
                 self.messages.put(('failure', label, exc))
-        threading.Thread(target=run, daemon=True, name='greeklish-worker').start()
+        threading.Thread(target=run, daemon=False, name='greeklish-worker').start()
 
     def _drain_messages(self):
         while True:
@@ -450,6 +664,7 @@ class GreeklishWindow:
                 self.state.set('APPLYING')
                 continue
             self.processing = False
+            self.current_operation = None
             if kind == 'failure':
                 if label == 'APPLY' and isinstance(value, PreviewChangedError):
                     self._invalidate()
@@ -463,31 +678,32 @@ class GreeklishWindow:
                 self.current_preview = value
                 self.checked = {i: True for i in range(value.count)}
                 self.manual_targets.clear()
-                self.tree.delete(*self.tree.get_children())
-                for index in range(value.count):
-                    self.tree.insert('', 'end', iid=str(index), values=('', '', '', ''))
-                    self._refresh_row(index)
-                self._refresh_counter()
+                self.extension_overrides.clear()
+                self._render_filtered_rows()
                 self.state.set('PREVIEW READY' if value.count else 'NO CHANGES')
                 self.summary.set('Untick to skip; double-click or select a row and Edit to change its proposed name.' if value.count else 'No names containing Greek letters need renaming.')
                 self.progress.set('Preview only. No files have been modified.')
                 self.apply_meter.set(0)
                 self.apply_meter_label.set('')
             elif label == 'APPLY':
-                renamed, log, count = value
+                report: RenameReport = value
                 self.current_preview = None
                 self.checked.clear()
                 self.manual_targets.clear()
-                self.last_log = log
-                self.state.set('COMPLETE' if renamed == count else 'PARTIAL')
-                self.counter.set(f'{renamed:,} of {count:,} renamed')
-                self.summary.set(f'CSV undo log: {log.name}')
-                self.apply_meter.set(100)
-                self.apply_meter_label.set(f'{count:,}/{count:,} processed  •  100%')
-                self.progress.set(f'{renamed:,}/{count:,} renamed  •  log: {log}')
-                messagebox.showinfo('Rename completed' if renamed == count else 'Partial completion',
-                                    f'{renamed} of {count} names renamed.\n\nUndo log:\n{log}\n\nKeep the CSV until you have checked the results.',
-                                    parent=self.root)
+                self.extension_overrides.clear()
+                self.last_log = report.log
+                self.state.set('STOPPED' if report.stopped else
+                               'PARTIAL' if report.failed_count or report.skipped_count else 'COMPLETE')
+                self.counter.set(f'{report.renamed_count:,} renamed / {report.selected_count:,} selected')
+                self.summary.set(f'CSV undo log: {report.log.name}')
+                if not report.stopped:
+                    self.apply_meter.set(100)
+                self.apply_meter_label.set(f'{report.processed_count:,}/{report.selected_count:,} processed'
+                                           + (' — stopped' if report.stopped else ' • 100%'))
+                self.progress.set(f'{report.renamed_count:,} renamed  •  {report.failed_count:,} failed'
+                                  f'  •  {report.skipped_count:,} skipped  •  Undo: {report.log}')
+                self._sync_controls()
+                ResultsDialog(self.root, report)
             elif label == 'UNDO':
                 restored, total = value
                 self.current_preview = None
@@ -512,8 +728,9 @@ class GreeklishWindow:
         if preview is None or preview.count == 0:
             return
         selected = self._selected_operations()
+        overrides = {preview.operations[i][0] for i in self.extension_overrides}
         try:
-            selected = validate_selection(preview, selected)
+            selected = validate_selection(preview, selected, extension_overrides=overrides)
         except (InvalidSelectionError, PreviewChangedError) as exc:
             messagebox.showerror('Review selection', str(exc), parent=self.root)
             return
@@ -522,6 +739,7 @@ class GreeklishWindow:
                     f'Rename {count} files/folders in:\n{preview.root}\n\nThis changes names, not file contents.\nA CSV undo log will be created.\n\nProceed?',
                     icon='warning', parent=self.root, default='no'):
             return
+        self.stop_event.clear()
         self.apply_meter.set(0)
         self.apply_meter_label.set(f'0/{count:,} processed  •  0%')
         self.progress.set(f'Applying selected renames: 0 of {count:,} processed…')
@@ -535,8 +753,9 @@ class GreeklishWindow:
                 if done == 1 or done == total or now - last_update[0] >= 0.07:
                     last_update[0] = now
                     self.messages.put(('progress', 'APPLY', (done, total, renamed)))
-            renamed, log = execute_preview(preview, selected=selected, progress_callback=report)
-            return renamed, log, count
+            return execute_preview_report(preview, selected=selected,
+                      stop_requested=self.stop_event.is_set, progress_callback=report,
+                      extension_overrides=overrides)
         self._start('APPLY', worker)
 
     def _export(self):

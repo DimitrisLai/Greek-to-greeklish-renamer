@@ -1,5 +1,5 @@
 Greek to Greeklish Renamer
-Version: 2.1.1 - Windows Desktop Edition
+Version: 2.1.2 - Windows Desktop Edition
 Created by Dimitris Laidis
 GitHub: https://github.com/DimitrisLai/Greek-to-greeklish-renamer
 License: MIT

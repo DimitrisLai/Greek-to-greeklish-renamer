@@ -6,7 +6,7 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Python tests](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/actions/workflows/tests.yml/badge.svg)](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/actions/workflows/tests.yml)
 
-**Version 2.1.1 · Created by Dimitris Laidis · MIT License**
+**Version 2.1.2 · Created by Dimitris Laidis · MIT License**
 
 ## Download
 
@@ -22,24 +22,27 @@ The **Windows ZIP** contains `GreeklishRenamer.exe` (no Python required), `READM
 - **Only rename names with Greek characters**; English-only or existing Greeklish names are skipped.
 - **Preview changes** in a table before committing anything.
 - **Every preview row has a real checkbox graphic** in the **INCLUDE** column. Click it to include/exclude that individual file or folder. All start checked. A **single button** toggles between **Select None** (when all are checked) and **Select All** (otherwise). You can also press Space on a highlighted row.
-- **Edit selected…** or double-click a preview row to enter your own new filename, without changing its parent folder. Manual entries are checked for unsafe Windows names, conflicts and duplicates.
+- **Edit selected…** or double-click a preview row to correct its new name. File extensions are **protected by default**; an advanced opt-in in the dialog permits changing them deliberately. All custom names are validated for Windows-invalid names and collisions.
+- **Find / Show filters** search original or proposed paths and display All, Included, Excluded, or Edited rows. Filtering changes **visibility only** and never changes which items are checked. The Select All/None toggle applies to the entire preview.
 - Only checked rows are applied or written to the undo CSV. Unchecked rows remain unchanged. If a selected parent folder contains an unchecked proposed rename, the app blocks applying that combination to avoid changing an excluded item's path.
 - The preview CSV records each row's selection and whether its proposed name was manually edited.
 - **Export the preview to CSV** without changing files.
 - **Apply with confirmation**; reject stale plans when the folder's contents change after Preview.
-- **Live progress bar and counter** during Apply: see how many of the selected names have been processed, the percentage completed, and how many were successfully renamed. The GUI remains responsive while the worker runs.
+- **Live progress bar and counter** during Apply: see processed names, percent completed, and successful rename count. The GUI remains responsive while the worker runs.
+- **Stop safely** can interrupt a large batch **between** file operations. The app does not exit during an active rename; attempting to close the window offers a safe stop. Completed renames stay recorded in the undo CSV.
+- **Detailed results window and CSV** after Apply: renamed, skipped, failed, excluded, and not processed with per-file reasons. A separate `greeklish_result_log_*.csv` is saved automatically next to the undo log; the results window can also export a copy.
 - Prevent collisions with numbered suffixes such as `(2)` and `(3)`.
 - **Undo from CSV** using the log generated during the rename; require exact `UNDO` confirmation.
 - Skip symlinks, junctions and Windows reparse points. Preserve file contents.
 
 ### First use
 
-1. Download the [v2.1.1 Windows ZIP](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.1.1) and extract it.
+1. Download the [v2.1.2 Windows ZIP](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.1.2) and extract it.
 2. Double-click **GreeklishRenamer.exe**.
 3. Click **Browse…** and choose a small folder to test.
 4. Leave subdirectories off initially. Click **Preview changes**.
-5. Review the before/after names, click the INCLUDE checkboxes to skip individual files, and edit incorrect proposals using **Edit selected…** (or double-click). Click **Apply renames** only when satisfied.
-6. Keep the dated undo CSV log in that directory until you verify the results.
+5. Filter the preview to find specific songs, untick any that should stay unchanged, and edit incorrect suggestions. File extensions are protected unless you explicitly opt out. Click **Apply renames** only when satisfied.
+6. Watch Apply progress; you can choose **Stop safely** during a long run. Review the detailed results and save both the undo and results CSV logs.
 
 **Before large renames, back up important files independently.** Playlists and programs referencing old paths may need updating. Undo is best-effort if paths were moved or changed after a run.
 
@@ -79,7 +82,7 @@ GitHub Actions runs regression tests on **Windows and Linux** using **Python 3.1
 
 ## Documentation and support
 
-- [PDF User Manual — v2.1.1](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.1.1) (included with the Windows ZIP)
+- [PDF User Manual — v2.1.2](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.1.2) (included with the Windows ZIP)
 - [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [MIT License](LICENSE)
 - [Report an issue](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/issues) using fictional filenames and nonsensitive paths
 
