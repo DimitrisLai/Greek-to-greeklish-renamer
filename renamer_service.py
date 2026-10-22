@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import csv
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Tuple, Callable, Collection
@@ -30,6 +31,7 @@ class RenamePreview:
     recursive: bool
     rename_folders: bool
     operations: Tuple[Operation, ...]
+    file_extensions: Tuple[str, ...] = ()
 
     @property
     def count(self) -> int:
@@ -44,16 +46,47 @@ class RenamePreview:
         return self.count - self.file_count
 
 
-def create_preview(folder: str | Path, *, recursive: bool, rename_folders: bool) -> RenamePreview:
+def normalize_extensions(extensions: Collection[str] | None) -> tuple[str, ...]:
+    """Canonical file suffix allow-list; empty means all file types."""
+    if not extensions:
+        return ()
+    output: set[str] = set()
+    for raw in extensions:
+        ext = str(raw).strip().lower()
+        if ext.startswith('*.'):
+            ext = ext[1:]
+        if ext and not ext.startswith('.'):
+            ext = '.' + ext
+        if not re.fullmatch(r'\.[a-z0-9]{1,12}', ext):
+            raise ValueError(f'Invalid file extension: {raw!r}. Use .mp3, .flac, etc.')
+        output.add(ext)
+    return tuple(sorted(output))
+
+
+def parse_extensions(text: str) -> tuple[str, ...]:
+    """Read a comma, semicolon or space separated list from the GUI."""
+    if not text.strip():
+        raise ValueError('Enter at least one extension, for example .mp3, .flac.')
+    return normalize_extensions(re.split(r'[,;\s]+', text.strip()))
+
+
+def create_preview(folder: str | Path, *, recursive: bool, rename_folders: bool,
+                   file_extensions: Collection[str] | None = None,
+                   scan_progress=None) -> RenamePreview:
     selected = Path(folder).expanduser()
     if is_link_or_junction(selected):
         raise ValueError('Please select a real folder instead of a shortcut, link or junction.')
     root = selected.resolve(strict=True)
     if not root.is_dir() or is_link_or_junction(root):
         raise ValueError('Select a normal, accessible folder (not a symbolic link or junction).')
+    extensions = normalize_extensions(file_extensions)
+    if extensions and rename_folders:
+        raise ValueError('Folder renaming is disabled when a file-type filter is active, to avoid moving excluded files.')
     folder_names = bool(recursive and rename_folders)
-    operations = tuple(plan_renames(root, recursive=bool(recursive), files_only=not folder_names))
-    return RenamePreview(root, bool(recursive), folder_names, operations)
+    operations = tuple(plan_renames(root, recursive=bool(recursive), files_only=not folder_names,
+                   file_extensions=frozenset(extensions) if extensions else None,
+                   scan_progress=scan_progress))
+    return RenamePreview(root, bool(recursive), folder_names, operations, extensions)
 
 
 def validate_new_filename(filename: str, *, original: str,
@@ -143,7 +176,8 @@ def validate_selection(preview: RenamePreview, selected: Iterable[Operation], *,
 def execute_preview(preview: RenamePreview, selected: Iterable[Operation] | None = None,
                     *, progress_callback=None, extension_overrides: Collection[Path] = ()) -> tuple[int, Path]:
     """Recheck the *full* original preview and validate the selected edited subset."""
-    updated = create_preview(preview.root, recursive=preview.recursive, rename_folders=preview.rename_folders)
+    updated = create_preview(preview.root, recursive=preview.recursive, rename_folders=preview.rename_folders,
+                             file_extensions=preview.file_extensions)
     if updated.operations != preview.operations:
         raise PreviewChangedError('The directory contents changed. Run Preview again before renaming.')
     plan = validate_selection(preview, preview.operations if selected is None else selected,
@@ -194,7 +228,8 @@ def execute_preview_report(preview: RenamePreview, selected: Iterable[Operation]
     checked between operations; every completed rename is flushed to the log.
     """
     updated = create_preview(preview.root, recursive=preview.recursive,
-                             rename_folders=preview.rename_folders)
+                             rename_folders=preview.rename_folders,
+                             file_extensions=preview.file_extensions)
     if updated.operations != preview.operations:
         raise PreviewChangedError('The directory contents changed. Run Preview again before renaming.')
     plan = validate_selection(preview, selected, extension_overrides=extension_overrides)

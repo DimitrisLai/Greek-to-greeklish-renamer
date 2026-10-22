@@ -11,10 +11,14 @@ Greek to Greeklish Renamer is a local filename-renaming utility. It never reads 
 - CSV undo can restore completed changes in reverse order, but is not a substitute for a backup: external moves, interrupted writes, permissions and unusual filesystems can prevent complete recovery.
 - Renaming filenames or directories may break external references such as playlists.
 
+## Optional Explorer integration
+
+The Windows Explorer folder right-click command is **not installed automatically**. A user must explicitly open the standalone EXE, choose **Explorer menu…** and approve installation. Registration modifies only `HKEY_CURRENT_USER\Software\Classes\Directory` menu entries created for this application; it needs no elevation and can be removed through the same window. The command only selects the folder and generates a read-only preview. It never supplies CLI `--yes` or automatically applies changes. After moving the EXE, remove or update the menu.
+
 ## Reporting security concerns
 
 Use GitHub private vulnerability reporting from the **Security** tab if enabled. Otherwise open a nonsensitive issue asking for a private contact channel. Never publish private directory listings, exploit details, passwords or other people's data.
 
 For ordinary bugs, open an [Issue](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/issues) with fictional names and your Windows/Python version.
 
-Current public release: v2.0.0. Licensed under [MIT](LICENSE). © 2026 Dimitris Laidis.
+Current public release: v2.2.0. Licensed under [MIT](LICENSE). © 2026 Dimitris Laidis.

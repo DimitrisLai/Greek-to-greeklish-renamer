@@ -32,7 +32,7 @@ def _configure_unicode_console() -> None:
 
 _configure_unicode_console()
 
-VERSION = "2.1.2"
+VERSION = "2.2.0"
 
 # Modern Greek -> ASCII transcription, inspired by ELOT 743 / ISO 843.
 # This is NOT a certified, fully reversible implementation: accents are removed.
@@ -163,10 +163,20 @@ def is_link_or_junction(path: Path) -> bool:
         return True
 
 
-def plan_renames(root: Path, recursive: bool = False, files_only: bool = False) -> list[tuple[Path, Path]]:
+def plan_renames(root: Path, recursive: bool = False, files_only: bool = False, *,
+                 file_extensions: frozenset[str] | None = None, scan_progress=None) -> list[tuple[Path, Path]]:
     """Produce a deterministic bottom-up plan; never change Latin-only names."""
     root = Path(root)
     plan: list[tuple[Path, Path]] = []
+    scanned_folders = 0
+    scanned_files = 0
+
+    def report_scan(folder: Path, file_count: int) -> None:
+        nonlocal scanned_folders, scanned_files
+        scanned_folders += 1
+        scanned_files += file_count
+        if scan_progress is not None:
+            scan_progress(scanned_folders, scanned_files, folder)
 
     if recursive:
         # Prune junctions/reparse points before descending, *then* reverse
@@ -185,6 +195,7 @@ def plan_renames(root: Path, recursive: bool = False, files_only: bool = False) 
                 if not is_link_or_junction(folder / name)
             ]
             folders[:] = safe_folders
+            report_scan(folder, len(files))
             collected.append((folder_string, safe_folders, files))
         walk = reversed(collected)
     else:
@@ -194,6 +205,7 @@ def plan_renames(root: Path, recursive: bool = False, files_only: bool = False) 
         except OSError as exc:
             print(f"[SKIP] Cannot open folder {root}: {exc}")
             return []
+        report_scan(root, len(files))
         walk = [(str(root), [], files)]
 
     for folder_string, folders, files in walk:
@@ -207,6 +219,8 @@ def plan_renames(root: Path, recursive: bool = False, files_only: bool = False) 
         if recursive and not files_only:
             items.extend((name, True) for name in folders)
         for name, is_dir in sorted(items, key=lambda item: (item[0].casefold(), item[0])):
+            if not is_dir and file_extensions is not None and Path(name).suffix.casefold() not in file_extensions:
+                continue
             if not contains_greek_letters(name):
                 continue
             old = folder / name

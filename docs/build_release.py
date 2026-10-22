@@ -5,7 +5,7 @@ import subprocess
 import zipfile
 from pathlib import Path
 
-VERSION='2.1.2'
+VERSION='2.2.0'
 MANUAL=f'Greek_to_Greeklish_Renamer_User_Manual_v{VERSION}_Dimitris_Laidis.pdf'
 WINDOWS=f'Greeklish-Renamer-v{VERSION}-Windows-Dimitris-Laidis.zip'
 SOURCE=f'Greeklish-Renamer-v{VERSION}-Source-Dimitris-Laidis.zip'
@@ -32,6 +32,10 @@ def build(output:Path, exe:Path|None):
             if filename.lower().endswith('.pdf'):
                 continue
             z.write(root/filename,filename)
+        # Include reproducibly generated icon assets as source ZIP conveniences.
+        for name in ('assets/GreeklishRenamer.ico', 'assets/GreeklishRenamer.png'):
+            if name not in tracked and (root/name).is_file():
+                z.write(root/name, name)
         z.write(pdf,'docs/'+MANUAL)
     for path in (output/WINDOWS,output/SOURCE):
         if not path.exists():continue

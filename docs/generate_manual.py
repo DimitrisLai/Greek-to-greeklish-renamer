@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Produce the public v2.1.2 user manual (build-time dependency: ReportLab)."""
+"""Produce the public v2.2.0 user manual (build-time dependency: ReportLab)."""
 from __future__ import annotations
 
 import argparse
@@ -13,7 +13,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
-VERSION = '2.1.2'
+VERSION = '2.2.0'
 AUTHOR = 'Dimitris Laidis'
 REPO = 'github.com/DimitrisLai/Greek-to-greeklish-renamer'
 W, H = A4
@@ -153,10 +153,10 @@ def make(out:Path):
     c.drawString(62,H-350,'Keep English filenames untouched.')
     c.setStrokeColor(TEAL);c.setLineWidth(3);c.line(62,H-398,228,H-398)
     c.setFillColor(HexColor('#BCD1DE'));c.setFont('Lato',10.2)
-    c.drawString(62,H-454,'Per-file checkboxes  /  Manual name editing  /  CSV undo')
-    c.drawString(62,H-477,'Live progress bar  /  Standalone Windows EXE')
+    c.drawString(62,H-454,'File-type filters  /  Scan progress  /  CSV undo')
+    c.drawString(62,H-477,'Explorer menu  /  Standalone EXE  /  Safe stop')
     c.setFont('LatoB',11);c.setFillColor(CYAN)
-    c.drawString(62,103,'VERSION 2.1.2  /  OPEN SOURCE  /  MIT LICENSE')
+    c.drawString(62,103,'VERSION 2.2.0  /  OPEN SOURCE  /  MIT LICENSE')
     c.setFillColor(HexColor('#ADBECD'));c.setFont('Lato',10)
     c.drawString(62,78,'Created by Dimitris Laidis')
     c.drawString(62,56,REPO)
@@ -171,11 +171,11 @@ def make(out:Path):
        ('<b>PDF User Manual</b>','This document; also included in the Windows ZIP.')],y,[179,CW-179],size=9.3)
     y=section(c,'Your first scan in six steps',y)
     y=bullets(c,[
-       '<b>1.</b> Download the Windows ZIP from the v2.1.2 GitHub Release.',
+       '<b>1.</b> Download the Windows ZIP from the v2.2.0 GitHub Release.',
        '<b>2.</b> Right-click the ZIP and choose <b>Extract All</b>.',
        '<b>3.</b> Double-click <b>GreeklishRenamer.exe</b>.',
        '<b>4.</b> Browse to a test folder with a few Greek filenames.',
-       '<b>5.</b> Leave subdirectories disabled at first; click <b>Preview changes</b>.',
+       '<b>5.</b> Choose All files or an optional file-type filter; click <b>Preview changes</b>.',
        '<b>6.</b> Find and untick unwanted entries; correct a proposed name; apply only checked rows.'
     ],y)
     y=note(c,'Start safely','Make a separate backup before bulk changes. The preview does not modify files. A CSV undo log is created for each applied run.',y)
@@ -186,17 +186,16 @@ def make(out:Path):
     y=section(c,'Screen guide',y)
     y=table(c,['AREA','WHAT IT DOES'],[
         ('<b>Folder location</b>','Enter a directory or choose Browse… to open the Windows folder picker.'),
-        ('<b>Include subdirectories</b>','Process files within nested folders; off by default.'),
-        ('<b>Also rename Greek folder names</b>','Optional and only available when subdirectories are included.'),
-        ('<b>Preview changes</b>','Build a read-only plan with current paths and proposed names.'),
+        ('<b>File-type filter</b>','Choose All, audio, MP3, FLAC, WAV, or a custom list of extensions.'),
+        ('<b>Preview + scan progress</b>','The moving bar counts folders and files as the read-only plan is generated.'),
+        ('<b>Explorer menu</b>','Optional, reversible per-user right-click option for folders; opens preview only.'),
         ('<b>Select All / Select None toggle</b>','One toggle switches between Select None (all checked) and Select All (otherwise).'),
         ('<b>Edit selected…</b>','Edit a proposed name. File extensions are protected unless you explicitly opt into advanced changes.'),
         ('<b>Find / Show filters</b>','Search original or proposed paths; show All, Included, Excluded or Edited. Selection remains unchanged.'),
         ('<b>Apply / Stop safely</b>','Apply checked names, or request a safe stop between filenames. Window closing is blocked while busy.'),
-        ('<b>Export preview</b>','Save the proposed changes to CSV without modifying files.'),
         ('<b>Results / Undo</b>','Review per-file outcomes and reasons. Auto-save results CSV and keep the separate undo CSV.')
-    ],y,[196,CW-196],size=9.2)
-    y=note(c,'Important detail','Filtering never changes checkboxes, and bulk Select All / None applies to every row, including hidden ones. Changing scan options requires a new preview.',y)
+    ],y,[196,CW-196],size=8.85)
+    y=note(c,'Important detail','File-type filtering restricts eligible files, not merely visibility. When a type filter is active, folder renaming is disabled to protect unrelated files. Search/Show only hides rows; checkboxes remain unchanged.',y)
     check(y,'interface page');c.showPage()
 
     # Page 4
@@ -293,7 +292,7 @@ def make(out:Path):
     # Page 9
     y=title(c,8,'Troubleshooting','Quick checks for common problems in the Windows UI and Python source edition.')
     y=table(c,['PROBLEM','WHAT TO DO'],[
-       ('The EXE does not open','Extract the ZIP first. Windows SmartScreen may prompt on an unsigned community-built EXE; download only from the official GitHub Release.'),
+       ('The EXE does not open','Extract ZIP first. SmartScreen may prompt for unsigned community applications.'),
        ('Nothing found','Check the selected folder and subdirectory option. Only names containing Greek letters qualify.'),
        ('Apply is disabled','Run Preview and check at least one row; changing options clears the preview.'),
         ('Search hides filenames','Search and status filters hide rows only; their Include state remains unchanged.'),
@@ -304,7 +303,7 @@ def make(out:Path):
        ('Access denied / locked file','Close music players, editors or sync clients. Check permissions and try again.'),
        ('Undo restores only some rows','Review the CSV and check for moved/missing files or occupied original names.'),
        ('Source GUI fails to start','Confirm Python 3.10+ includes Tkinter. Use the standalone EXE if Python is not available.')
-    ],y,[151,CW-151],size=9.15)
+    ],y,[151,CW-151],size=8.8)
     y=note(c,'Windows build disclaimer','The GitHub workflow tests the engine on Windows and Linux and builds a Windows EXE. You should still smoke-test launching and renaming on your own Windows desktop.',y)
     check(y,'troubleshooting page');c.showPage()
 
@@ -312,7 +311,7 @@ def make(out:Path):
     y=title(c,9,'Project information','Release details, support channels and responsible use.')
     y=table(c,['ITEM','DETAIL'],[
        ('Project','Greek to Greeklish Renamer'),
-       ('Release','v2.1.2 — Safe Batch Control'),
+       ('Release','v2.2.0 — Windows Integration & Filtered Scans'),
        ('Author','Dimitris Laidis / GitHub: DimitrisLai'),
        ('License','MIT (source code); dependencies keep their respective terms'),
        ('Source runtime','Python 3.10+, standard library (Tkinter)'),
@@ -320,13 +319,13 @@ def make(out:Path):
        ('Repository',REPO),
        ('Support','GitHub Issues (use fictional example filenames)')
     ],y,[156,CW-156],size=9.1)
-    y=section(c,'New in version 2.1.2',y)
+    y=section(c,'New in version 2.2.0',y)
     y=bullets(c,[
-       'Find proposed or original names and filter All, Included, Excluded and Edited without changing selection.',
-       'Edit proposed filenames with extension locking by default; allow extension changes only with advanced opt-in.',
-       'Stop safely between rename operations; window close requests cannot interrupt active work.',
-       'Inspect automatic results CSV with per-file successes, skips, failures and reasons; undo remains compatible.',
-       'Existing CLI, original conversion engine and v2.0.0 release remain available.'
+       'Filter eligible filenames to audio, MP3, FLAC, WAV, or custom extensions.',
+       'Watch an animated scan indicator with live folders/files inspected.',
+       'Install or remove optional per-user Explorer integration; previews only.',
+       'Windows icon and version details; verify releases using SHA256SUMS.txt.',
+       'Keep existing safe stop, selective renames, CSV results and undo.'
     ],y)
     y=note(c,'Privacy and responsible use','The application operates locally. It does not upload filenames or file data. Keep separate backups, verify previews and avoid posting private folder paths in public issue reports.',y)
     check(y,'project page');c.showPage()

@@ -6,7 +6,7 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Python tests](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/actions/workflows/tests.yml/badge.svg)](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/actions/workflows/tests.yml)
 
-**Version 2.1.2 · Created by Dimitris Laidis · MIT License**
+**Version 2.2.0 · Created by Dimitris Laidis · MIT License**
 
 ## Download
 
@@ -14,9 +14,23 @@
 
 The **Windows ZIP** contains `GreeklishRenamer.exe` (no Python required), `README_FIRST.txt`, `LICENSE`, and the user manual. **Extract the ZIP before running the EXE.** The Source ZIP includes the GUI, original CLI, tests and documentation. The app runs locally: no accounts, ads, telemetry, uploads or network lookups.
 
+## Verify the official downloads
+
+The release includes `SHA256SUMS.txt` with SHA-256 digests of the Windows ZIP, Source ZIP and PDF. In PowerShell, run:
+
+```powershell
+(Get-FileHash .\Greeklish-Renamer-v2.2.0-Windows-Dimitris-Laidis.zip -Algorithm SHA256).Hash
+```
+
+Compare the result with the official release `SHA256SUMS.txt`. Hashes confirm file integrity against the published manifest, not independent code-signing trust. Signing is a separate process.
+
 ## Windows desktop interface
 
-- **Choose a directory** with a folder picker, or paste a folder path.
+- **Choose a directory** using Browse, a pasted path or the optional Explorer menu.
+- **Extension allow-list:** All, Audio (.mp3/.flac/.wav), MP3, FLAC, WAV or a custom list. While filtering, folder renaming is disabled so unrelated files do not move.
+- **Scan progress:** An animated indicator reports folders/files inspected without inventing an incomplete-scan percentage.
+- **Explorer menu:** Optional per-user context command, installed or removed from the EXE; Windows 11 may display it under Show more options. Opening only previews; applying still needs confirmation.
+- **Windows identity:** Branded icon and EXE version properties; SHA-256 hashes of release assets in `SHA256SUMS.txt`.
 - **Include subdirectories** when needed. Off by default.
 - Independently choose whether to **rename Greek folder names**. Disabled unless scanning subdirectories.
 - **Only rename names with Greek characters**; English-only or existing Greeklish names are skipped.
@@ -37,10 +51,10 @@ The **Windows ZIP** contains `GreeklishRenamer.exe` (no Python required), `READM
 
 ### First use
 
-1. Download the [v2.1.2 Windows ZIP](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.1.2) and extract it.
+1. Download the [v2.2.0 Windows ZIP](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.2.0) and extract it.
 2. Double-click **GreeklishRenamer.exe**.
 3. Click **Browse…** and choose a small folder to test.
-4. Leave subdirectories off initially. Click **Preview changes**.
+4. Choose All files or a custom file type, then click **Preview changes**. The scan indicator shows live folder/file counts.
 5. Filter the preview to find specific songs, untick any that should stay unchanged, and edit incorrect suggestions. File extensions are protected unless you explicitly opt out. Click **Apply renames** only when satisfied.
 6. Watch Apply progress; you can choose **Stop safely** during a long run. Review the detailed results and save both the undo and results CSV logs.
 
@@ -72,6 +86,12 @@ py rename_greek_to_greeklish.py --path "D:\Music" --undo "D:\Music\greeklish_ren
 
 The original `Run_Greek_to_Greeklish.cmd` remains for console users. `Run_Greeklish_Renamer_UI.cmd` launches the GUI from the source edition.
 
+### Explorer integration (optional)
+
+Extract the release ZIP to a **permanent folder** and open `GreeklishRenamer.exe`. Click **Explorer menu…** and select **Yes** to install/update, **No** to remove or **Cancel** to keep it unchanged. No administrator privileges are needed; the tool writes only to the current user's Explorer settings. The right-click command **Convert to Greeklish (preview)** only opens a read-only preview. On Windows 11 it may appear under **Show more options**. If you move the executable, reinstall the menu or remove it before deletion.
+
+You can also open `py greeklish_gui.py --folder "D:\Music"` from source, without any registry changes.
+
 ## Testing
 
 ```powershell
@@ -82,7 +102,7 @@ GitHub Actions runs regression tests on **Windows and Linux** using **Python 3.1
 
 ## Documentation and support
 
-- [PDF User Manual — v2.1.2](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.1.2) (included with the Windows ZIP)
+- [PDF User Manual — v2.2.0](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.2.0) (included with the Windows ZIP)
 - [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [MIT License](LICENSE)
 - [Report an issue](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/issues) using fictional filenames and nonsensitive paths
 

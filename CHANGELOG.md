@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.1.2] — 2026-10-22
+## v2.2.0 (2026-10-22)
+- Optional file-type filters, including custom extension lists.
+- Indeterminate scan progress with folder and file counters.
+- Branded Windows application icon, version resource, SHA-256 release digests.
+- Opt-in, uninstallable, per-user Explorer folder right-click integration (preview-only).
+- Preserved selective renaming, manual edits, undo, safe stop and CLI.
+
+## [2.1.1] — 2026-10-22
 
 - Replaced the two bulk-selection buttons with one dynamic **Select All / Select None** toggle.
 - Replaced font-dependent checkboxes with a visible per-row checkbox image in the INCLUDE column.

@@ -7,4 +7,13 @@ venv/
 .vscode/
 .DS_Store
 Thumbs.db
+# Undo logs from personal file collections (never commit filenames accidentally)
 greeklish_rename_log_*.csv
+# Built application outputs and reproducible generated icon assets
+build/
+dist/
+*.spec
+assets/GreeklishRenamer.ico
+assets/GreeklishRenamer.png
+# Results CSV logs can contain private filenames
+greeklish_result_log_*.csv
