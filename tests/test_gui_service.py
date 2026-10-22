@@ -213,7 +213,7 @@ class GUISelectionTests(unittest.TestCase):
     def test_selected_folder_and_child_manual_name(self):
         old = self.put('Ελληνικά/Τραγούδι.mp3', b'good')
         p = self.preview(recursive=True, rename_folders=True)
-        edit = tuple((source, old.with_name('Custom Song.mp3')) if source == old else (source,target)
+        edit = tuple((source, old.with_name('Custom Song.mp3')) if source.name == old.name else (source,target)
                      for source,target in p.operations)
         n, log = execute_preview(p, selected=edit)
         self.assertEqual(n,2)

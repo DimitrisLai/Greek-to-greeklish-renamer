@@ -82,15 +82,18 @@ def validate_selection(preview: RenamePreview, selected: Iterable[Operation]) ->
     """
     original = {old: new for old, new in preview.operations}
     choices: dict[Path, Path] = {}
-    for old, new in selected:
+    for submitted_old, submitted_new in selected:
+        # Windows temp directories sometimes use 8.3 aliases (RUNNER~1).
+        # Preview uses the resolved, long path. Normalize caller-supplied paths
+        # before matching so an equivalent path is not rejected or misapplied.
+        old = Path(submitted_old).resolve(strict=False)
+        new = Path(submitted_new)
         if old not in original or old in choices:
             raise InvalidSelectionError('Unknown or duplicate preview row. Run Preview again.')
-        if not isinstance(new, Path):
-            new = Path(new)
-        if new.parent != old.parent:
+        if new.parent.resolve(strict=False) != old.parent:
             raise InvalidSelectionError('Edit the filename only; moving files to other directories is not supported.')
         validate_new_filename(new.name, original=old.name)
-        choices[old] = new
+        choices[old] = old.with_name(new.name)
     if not choices:
         raise InvalidSelectionError('No rows selected. Tick one or more rows before applying.')
 
