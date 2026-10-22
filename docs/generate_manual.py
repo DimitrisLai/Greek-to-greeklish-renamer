@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Produce the public v2.0.0 user manual (build-time dependency: ReportLab)."""
+"""Produce the public v2.1.0 user manual (build-time dependency: ReportLab)."""
 from __future__ import annotations
 
 import argparse
@@ -13,7 +13,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
-VERSION = '2.0.0'
+VERSION = '2.1.0'
 AUTHOR = 'Dimitris Laidis'
 REPO = 'github.com/DimitrisLai/Greek-to-greeklish-renamer'
 W, H = A4
@@ -153,10 +153,10 @@ def make(out:Path):
     c.drawString(62,H-350,'Keep English filenames untouched.')
     c.setStrokeColor(TEAL);c.setLineWidth(3);c.line(62,H-398,228,H-398)
     c.setFillColor(HexColor('#BCD1DE'));c.setFont('Lato',10.2)
-    c.drawString(62,H-454,'Folder browser  /  Greek-only scanning  /  CSV undo')
+    c.drawString(62,H-454,'Selectable preview  /  Manual name editing  /  CSV undo')
     c.drawString(62,H-477,'Simple interface  /  Standalone Windows EXE')
     c.setFont('LatoB',11);c.setFillColor(CYAN)
-    c.drawString(62,103,'VERSION 2.0.0  /  OPEN SOURCE  /  MIT LICENSE')
+    c.drawString(62,103,'VERSION 2.1.0  /  OPEN SOURCE  /  MIT LICENSE')
     c.setFillColor(HexColor('#ADBECD'));c.setFont('Lato',10)
     c.drawString(62,78,'Created by Dimitris Laidis')
     c.drawString(62,56,REPO)
@@ -171,12 +171,12 @@ def make(out:Path):
        ('<b>PDF User Manual</b>','This document; also included in the Windows ZIP.')],y,[179,CW-179],size=9.3)
     y=section(c,'Your first scan in six steps',y)
     y=bullets(c,[
-       '<b>1.</b> Download the Windows ZIP from the v2.0.0 GitHub Release.',
+       '<b>1.</b> Download the Windows ZIP from the v2.1.0 GitHub Release.',
        '<b>2.</b> Right-click the ZIP and choose <b>Extract All</b>.',
        '<b>3.</b> Double-click <b>GreeklishRenamer.exe</b>.',
        '<b>4.</b> Browse to a test folder with a few Greek filenames.',
        '<b>5.</b> Leave subdirectories disabled at first; click <b>Preview changes</b>.',
-       '<b>6.</b> Review the full table; click <b>Apply renames</b> and confirm only if correct.'
+       '<b>6.</b> Untick rows to skip and Edit incorrect proposals; apply only checked rows.'
     ],y)
     y=note(c,'Start safely','Make a separate backup before bulk changes. The preview does not modify files. A CSV undo log is created for each applied run.',y)
     check(y,'start page');c.showPage()
@@ -189,11 +189,13 @@ def make(out:Path):
         ('<b>Include subdirectories</b>','Process files within nested folders; off by default.'),
         ('<b>Also rename Greek folder names</b>','Optional and only available when subdirectories are included.'),
         ('<b>Preview changes</b>','Build a read-only plan with current paths and proposed names.'),
-        ('<b>Apply renames</b>','Ask for confirmation, recheck the plan, then rename and log results.'),
+        ('<b>Select All / Select None</b>','Check or uncheck all proposals; every row starts checked.'),
+        ('<b>Edit selected…</b>','Select a row or double-click it to edit the proposed filename only.'),
+        ('<b>Apply renames</b>','Confirm, validate selected names and log changes actually performed.'),
         ('<b>Export preview</b>','Save the proposed changes to CSV without modifying files.'),
         ('<b>Undo from CSV</b>','Select a previous undo log and type <b>UNDO</b> to restore names.')
     ],y,[196,CW-196],size=9.2)
-    y=note(c,'Important detail','Changing the folder or either option clears the old preview. The application requires a new preview before applying renames.',y)
+    y=note(c,'Important detail','An unticked row stays unchanged. Changing the folder or scan options clears the preview; make a new preview before applying.',y)
     check(y,'interface page');c.showPage()
 
     # Page 4
@@ -205,12 +207,15 @@ def make(out:Path):
        ('Folder','Μουσική','Mousiki'),
        ('File','Αθήνα/Τραγούδι.mp3','Αθήνα/Tragoudi.mp3')
     ],y,[62,191,CW-253],size=9.1)
-    y=section(c,'Applying a reviewed plan',y)
+    y=section(c,'Choose, correct and apply only what you want',y)
     y=bullets(c,[
-       'Only rows in the preview are candidates. Names with no Greek letters are not included.',
-       'Pressing <b>Apply renames</b> shows a separate confirmation dialog.',
+       'Every candidate starts with a checked box. Click a checkbox, or press Space on a selected row, to skip/include it.',
+       'Use <b>Select All</b> and <b>Select None</b> for larger collections.',
+       'Select a row and click <b>Edit selected</b>, or double-click the row, to customize its proposed filename.',
+       'Pressing <b>Apply renames</b> confirms and applies <b>only checked rows</b>.',
        'Before applying, the tool recomputes the plan. If the folder changed, the operation is rejected and a new preview is required.',
-       'A completed operation writes a timestamped CSV undo log to the selected folder.',
+       'Skip child changes safely: uncheck the parent folder when a child is excluded.',
+       'The CSV undo log contains only completed changes. Export preview includes selected/edited flags.',
        'If files are locked, missing or permissions fail, some changes may be skipped; review the completion count and retain the log.'
     ],y)
     y=note(c,'Do not treat preview as a file-content comparison','This tool modifies filenames and directory names, not media metadata, contents, lyrics or audio. It does not compare hashes or file quality.',y)
@@ -262,6 +267,7 @@ def make(out:Path):
     y=bullets(c,[
        'Keep the <b>greeklish_rename_log_YYYYMMDD_HHMMSS_microseconds.csv</b> created in the chosen folder.',
        'Click <b>Undo from CSV</b> and select the log from the run you want to reverse.',
+       'Manually edited names are restored like automatic names; unchecked rows do not appear in the undo log.',
        'Verify that the folder is correct, then type the exact word <b>UNDO</b>.',
        'Undo processes changes in reverse order. If a source is missing or an original destination is now occupied, it skips that row rather than overwriting.'
     ],y)
@@ -288,7 +294,9 @@ def make(out:Path):
     y=table(c,['PROBLEM','WHAT TO DO'],[
        ('The EXE does not open','Extract the ZIP first. Windows SmartScreen may prompt on an unsigned community-built EXE; download only from the official GitHub Release.'),
        ('Nothing found','Check the selected folder and subdirectory option. Only names containing Greek letters qualify.'),
-       ('Apply is disabled','Run Preview first. Changing options invalidates the old preview.'),
+       ('Apply is disabled','Run Preview and check at least one row; changing options clears the preview.'),
+       ('Edited name is rejected','Use a unique name in the same folder, without reserved Windows characters.'),
+       ('Unchecked child blocks Apply','Uncheck the selected parent folder too, or explicitly select the child.'),
        ('Folder changed before apply','Run Preview again; the stale plan is intentionally rejected.'),
        ('Access denied / locked file','Close music players, editors or sync clients. Check permissions and try again.'),
        ('Undo restores only some rows','Review the CSV and check for moved/missing files or occupied original names.'),
@@ -301,7 +309,7 @@ def make(out:Path):
     y=title(c,9,'Project information','Release details, support channels and responsible use.')
     y=table(c,['ITEM','DETAIL'],[
        ('Project','Greek to Greeklish Renamer'),
-       ('Release','v2.0.0 — Desktop UI'),
+       ('Release','v2.1.0 — Selective Renaming'),
        ('Author','Dimitris Laidis / GitHub: DimitrisLai'),
        ('License','MIT (source code); dependencies keep their respective terms'),
        ('Source runtime','Python 3.10+, standard library (Tkinter)'),
@@ -309,13 +317,13 @@ def make(out:Path):
        ('Repository',REPO),
        ('Support','GitHub Issues (use fictional example filenames)')
     ],y,[156,CW-156],size=9.1)
-    y=section(c,'What is different in version 2.0.0?',y)
+    y=section(c,'What is new in version 2.1.0?',y)
     y=bullets(c,[
-       'New Windows-style graphical interface with folder browsing and a readable rename table.',
-       'Separate controls for recursive scanning and Greek folder renaming.',
-       'Read-only CSV preview export and CSV-based undo directly in the GUI.',
-       'Extra protection against applying a stale rename preview.',
-       'Existing command-line program, transliteration logic and previous safety rules retained.'
+       'Choose which proposed filenames to rename using per-row checkboxes and Select All / None.',
+       'Edit a selected row (or double-click) to fix incorrect transliterations manually.',
+       'Prevent duplicate destinations, invalid names and unintended excluded child moves.',
+       'Export CSV with selection and edit markers; Undo logs only performed changes.',
+       'Existing CLI, original conversion engine and v2.0.0 release remain available.'
     ],y)
     y=note(c,'Privacy and responsible use','The application operates locally. It does not upload filenames or file data. Keep separate backups, verify previews and avoid posting private folder paths in public issue reports.',y)
     check(y,'project page');c.showPage()

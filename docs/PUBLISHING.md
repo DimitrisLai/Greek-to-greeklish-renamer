@@ -2,13 +2,13 @@
 
 This repository automatically tests Python 3.10 and 3.13 on Windows and Linux via `.github/workflows/tests.yml`.
 
-The one-time **v2.0.0** release workflow `.github/workflows/release-v2.0.0.yml` builds a native Windows EXE with PyInstaller on Windows, tests the EXE via `--self-test`, generates a 10-page PDF on Linux, then publishes the ZIPs and PDF into the GitHub Release. It also publishes a copy of the PDF to `docs/` on `main`.
+The one-time **v2.1.0** release workflow `.github/workflows/release-v2.1.0.yml` builds a native Windows EXE with PyInstaller on Windows, tests the EXE via `--self-test`, generates a 10-page PDF on Linux, then publishes the ZIPs and PDF into the GitHub Release. It also publishes a copy of the PDF to `docs/` on `main`.
 
 ## Public release assets
 
-- `Greeklish-Renamer-v2.0.0-Windows-Dimitris-Laidis.zip` — EXE + PDF + license + README_FIRST.
-- `Greeklish-Renamer-v2.0.0-Source-Dimitris-Laidis.zip` — sources + tests + docs + PDF.
-- `Greek_to_Greeklish_Renamer_User_Manual_v2.0.0_Dimitris_Laidis.pdf` — public manual.
+- `Greeklish-Renamer-v2.1.0-Windows-Dimitris-Laidis.zip` — EXE + PDF + license + README_FIRST.
+- `Greeklish-Renamer-v2.1.0-Source-Dimitris-Laidis.zip` — sources + tests + docs + PDF.
+- `Greek_to_Greeklish_Renamer_User_Manual_v2.1.0_Dimitris_Laidis.pdf` — public manual.
 
 ## Prepare any future version
 

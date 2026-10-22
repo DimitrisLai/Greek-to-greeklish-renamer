@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.1.0] — 2026-10-22
+
+- Added per-row checkboxes to selectively apply proposed renames (all checked by default).
+- Added Select All / Select None and keyboard Space toggling for the preview list.
+- Added Edit selected dialog and double-click editing of proposed filenames/folders.
+- Added Windows filename validation, duplicate/collision checks, and protection for unchecked descendants of renamed folders.
+- Re-validate the original full preview and edited selected subset immediately before applying.
+- Updated CSV preview export to include selected and manually edited flags; CSV undo still includes only performed changes.
+- Added regression tests and EXE smoke testing for selective and manually edited renames.
+- Preserved the existing CLI and retained historical v2.0.0 release.
+
 ## [2.0.0] — 2026-10-21
 
 - Added a complete Windows desktop user interface, using Tkinter with zero runtime dependencies.
