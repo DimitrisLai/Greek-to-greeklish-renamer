@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Produce the public v2.3.0 user manual (build-time dependency: ReportLab)."""
+"""Produce the public v2.4.0 user manual (build-time dependency: ReportLab)."""
 from __future__ import annotations
 
 import argparse
@@ -13,7 +13,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
-VERSION = '2.3.0'
+VERSION = '2.4.0'
 AUTHOR = 'Dimitris Laidis'
 REPO = 'github.com/DimitrisLai/Greek-to-greeklish-renamer'
 W, H = A4
@@ -153,10 +153,10 @@ def make(out:Path):
     c.drawString(62,H-350,'Keep English filenames untouched.')
     c.setStrokeColor(TEAL);c.setLineWidth(3);c.line(62,H-398,228,H-398)
     c.setFillColor(HexColor('#BCD1DE'));c.setFont('Lato',10.2)
-    c.drawString(62,H-454,'Rename history  /  Collision protection  /  CSV undo')
-    c.drawString(62,H-477,'Safe exports  /  Standalone EXE  /  Safe stop')
+    c.drawString(62,H-454,'Remembered settings  /  Cancel scan  /  History')
+    c.drawString(62,H-477,'Safe renaming  /  Undo  /  Standalone EXE')
     c.setFont('LatoB',11);c.setFillColor(CYAN)
-    c.drawString(62,103,'VERSION 2.3.0  /  OPEN SOURCE  /  MIT LICENSE')
+    c.drawString(62,103,'VERSION 2.4.0  /  OPEN SOURCE  /  MIT LICENSE')
     c.setFillColor(HexColor('#ADBECD'));c.setFont('Lato',10)
     c.drawString(62,78,'Created by Dimitris Laidis')
     c.drawString(62,56,REPO)
@@ -171,11 +171,11 @@ def make(out:Path):
        ('<b>PDF User Manual</b>','This document; also included in the Windows ZIP.')],y,[179,CW-179],size=9.3)
     y=section(c,'Your first scan in six steps',y)
     y=bullets(c,[
-       '<b>1.</b> Download the Windows ZIP from the v2.3.0 GitHub Release.',
+       '<b>1.</b> Download the Windows ZIP from the v2.4.0 GitHub Release.',
        '<b>2.</b> Right-click the ZIP and choose <b>Extract All</b>.',
        '<b>3.</b> Double-click <b>GreeklishRenamer.exe</b>.',
        '<b>4.</b> Browse to a test folder with a few Greek filenames.',
-       '<b>5.</b> Choose All files or an optional file-type filter; click <b>Preview changes</b>.',
+       '<b>5.</b> Choose a file-type filter and click <b>Preview changes</b>. Cancel scan if needed.',
        '<b>6.</b> Find and untick unwanted entries; correct a proposed name; apply only checked rows.'
     ],y)
     y=note(c,'Start safely','Make a separate backup before bulk changes. The preview does not modify files. A CSV undo log is created for each applied run.',y)
@@ -185,10 +185,10 @@ def make(out:Path):
     y=title(c,2,'Meet the desktop interface','A focused window for selecting a folder, reviewing changes, applying renames and restoring names.')
     y=section(c,'Screen guide',y)
     y=table(c,['AREA','WHAT IT DOES'],[
-        ('<b>Folder location</b>','Enter a directory or choose Browse… to open the Windows folder picker.'),
-        ('<b>File-type filter</b>','Choose All, audio, MP3, FLAC, WAV, or a custom list of extensions.'),
-        ('<b>Preview + scan progress</b>','The moving bar counts folders and files as the read-only plan is generated.'),
-        ('<b>Explorer menu</b>','Optional, reversible per-user right-click option for folders; opens preview only.'),
+        ('<b>Folder location</b>','Browse to select a folder; the last existing directory is remembered locally.'),
+        ('<b>File-type filter</b>','All, audio, MP3, FLAC, WAV or custom extensions; last choice is remembered.'),
+        ('<b>Preview / Cancel scan</b>','Live file/folder counters; cancelling discards the partial scan without renaming.'),
+        ('<b>Explorer menu (classic)</b>','Optional per-user right-click preview under Show more options on Windows 11.'),
         ('<b>Select All / Select None toggle</b>','One toggle switches between Select None (all checked) and Select All (otherwise).'),
         ('<b>Edit selected…</b>','Edit a proposed name. File extensions are protected unless you explicitly opt into advanced changes.'),
         ('<b>Find / Show filters</b>','Search original or proposed paths; show All, Included, Excluded or Edited. Selection remains unchanged.'),
@@ -196,7 +196,7 @@ def make(out:Path):
         ('<b>Results / Undo</b>','Review per-file outcomes and reasons. Keep the separate undo CSV.'),
         ('<b>History…</b>','Browse undo logs saved in the selected folder, inspect their entries and request a confirmed undo.')
     ],y,[196,CW-196],size=8.85)
-    y=note(c,'Important detail','File-type filtering restricts eligible files, not merely visibility. When a type filter is active, folder renaming is disabled to protect unrelated files. Search/Show only hides rows; checkboxes remain unchanged.',y)
+    y=paragraph(c,'<b>Safety:</b> Saved settings never start a scan automatically; filtered views do not alter selections.',y,size=8.8,leading=13)-9
     check(y,'interface page');c.showPage()
 
     # Page 4
@@ -299,7 +299,8 @@ def make(out:Path):
        ('Nothing found','Check the selected folder and subdirectory option. Only names containing Greek letters qualify.'),
        ('Apply is disabled','Run Preview and check at least one row; changing options clears the preview.'),
         ('Search hides filenames','Search and status filters hide rows only; their Include state remains unchanged.'),
-        ('Progress looks slow','Use Stop safely to finish the current rename and retain logs. The final results identify failures.'),
+        ('Scan takes too long','Click Cancel scan; the preview is discarded, no files renamed. Run Preview again when ready.'),
+       ('Applying takes long','Use Stop safely to finish the current rename and retain logs.'),
        ('Edited name is rejected','File extensions are protected by default. For a deliberate extension change, enable the advanced checkbox.'),
        ('Unchecked child blocks Apply','Uncheck the selected parent folder too, or explicitly select the child.'),
        ('Folder changed before apply','Run Preview again; the stale plan is intentionally rejected.'),
@@ -308,14 +309,14 @@ def make(out:Path):
        ('History is empty','Choose the original target folder. History only shows undo CSVs located directly inside that folder.'),
        ('Source GUI fails to start','Confirm Python 3.10+ includes Tkinter. Use the standalone EXE if Python is not available.')
     ],y,[151,CW-151],size=8.8)
-    y=note(c,'Windows build disclaimer','The GitHub workflow tests the engine on Windows and Linux and builds a Windows EXE. You should still smoke-test launching and renaming on your own Windows desktop.',y)
+    y=paragraph(c,'<b>Note:</b> Test the standalone EXE on your own Windows desktop before large-batch use.',y,size=8.7,leading=13)-9
     check(y,'troubleshooting page');c.showPage()
 
     # Page 10
     y=title(c,9,'Project information','Release details, support channels and responsible use.')
     y=table(c,['ITEM','DETAIL'],[
        ('Project','Greek to Greeklish Renamer'),
-       ('Release','v2.3.0 — History & Collision Safety'),
+       ('Release','v2.4.0 — Remembered Settings & Cancel Scan'),
        ('Author','Dimitris Laidis / GitHub: DimitrisLai'),
        ('License','MIT (source code); dependencies keep their respective terms'),
        ('Source runtime','Python 3.10+, standard library (Tkinter)'),
@@ -323,13 +324,13 @@ def make(out:Path):
        ('Repository',REPO),
        ('Support','GitHub Issues (use fictional example filenames)')
     ],y,[156,CW-156],size=9.1)
-    y=section(c,'New in version 2.3.0',y)
+    y=section(c,'New in version 2.4.0',y)
     y=bullets(c,[
-       'Browse a folder-specific history of previous rename runs without manually finding CSV files.',
-       'Inspect recorded changes and choose a run for confirmed Undo within the app.',
-       'Protect destinations from concurrent overwrite using atomic no-replace moves.',
-       'Harden preview/results CSV for spreadsheet formulas while keeping undo logs lossless.',
-       'Keep extension filters, Explorer integration, safe stop and SHA256SUMS verification.'
+       'Last valid folder and file-type choices are saved locally and restored without running a scan.',
+       'Cancel a slow Preview scan; cancelled scans do not rename files or create undo logs.',
+       'Scan cancellation is separate from Stop safely for a rename already being applied.',
+       'Modern Windows 11 top-level context menus require a native signed package; the optional classic menu remains under Show more options.',
+       'Existing History/Undo, collision safeguards, CSV protections and extension filters remain available.'
     ],y)
     y=note(c,'Privacy and responsible use','The application operates locally. It does not upload filenames or file data. Keep separate backups, verify previews and avoid posting private folder paths in public issue reports.',y)
     check(y,'project page');c.showPage()

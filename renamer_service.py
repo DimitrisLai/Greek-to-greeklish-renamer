@@ -73,7 +73,7 @@ def parse_extensions(text: str) -> tuple[str, ...]:
 
 def create_preview(folder: str | Path, *, recursive: bool, rename_folders: bool,
                    file_extensions: Collection[str] | None = None,
-                   scan_progress=None) -> RenamePreview:
+                   scan_progress=None, should_cancel=None) -> RenamePreview:
     selected = Path(folder).expanduser()
     if is_link_or_junction(selected):
         raise ValueError('Please select a real folder instead of a shortcut, link or junction.')
@@ -86,7 +86,7 @@ def create_preview(folder: str | Path, *, recursive: bool, rename_folders: bool,
     folder_names = bool(recursive and rename_folders)
     operations = tuple(plan_renames(root, recursive=bool(recursive), files_only=not folder_names,
                    file_extensions=frozenset(extensions) if extensions else None,
-                   scan_progress=scan_progress))
+                   scan_progress=scan_progress, should_cancel=should_cancel))
     return RenamePreview(root, bool(recursive), folder_names, operations, extensions)
 
 

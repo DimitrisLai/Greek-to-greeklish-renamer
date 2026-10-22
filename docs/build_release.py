@@ -5,7 +5,7 @@ import subprocess
 import zipfile
 from pathlib import Path
 
-VERSION='2.3.0'
+VERSION='2.4.0'
 MANUAL=f'Greek_to_Greeklish_Renamer_User_Manual_v{VERSION}_Dimitris_Laidis.pdf'
 WINDOWS=f'Greeklish-Renamer-v{VERSION}-Windows-Dimitris-Laidis.zip'
 SOURCE=f'Greeklish-Renamer-v{VERSION}-Source-Dimitris-Laidis.zip'

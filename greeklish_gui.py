@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Greek to Greeklish Renamer 2.3.0 — native Windows desktop UI.
+"""Greek to Greeklish Renamer 2.4.0 — native Windows desktop UI.
 
 Built with Python's standard-library Tkinter. No Tk calls occur on worker threads.
 The existing command-line renamer remains available separately.
@@ -32,7 +32,7 @@ from renamer_service import (InvalidSelectionError, PreviewChangedError, RenameP
                              RenameReport, create_preview, execute_preview,
                              execute_preview_report, restore_log,
                              validate_new_filename, validate_selection)
-from rename_greek_to_greeklish import VERSION
+from rename_greek_to_greeklish import VERSION, ScanCancelled
 from renamer_service import parse_extensions
 from history_service import list_history, read_history
 from history_dialog import HistoryDialog
@@ -41,6 +41,7 @@ from csv_safety import spreadsheet_cell
 from explorer_integration import register as register_explorer, unregister as unregister_explorer, executable_for_menu
 
 from gui_theme import *  # shared palette and extension presets
+from user_preferences import Preferences, load as load_preferences, save as save_preferences
 from gui_layout import WindowLayoutMixin
 
 
@@ -111,6 +112,28 @@ def check_headless_build() -> int:
             return 21
         if greek.read_bytes() != b'original':
             return 22
+    # Exercise cooperative cancellation within the frozen EXE itself.
+    with tempfile.TemporaryDirectory(prefix='greeklish-gui-scan-cancel-') as folder:
+        root = Path(folder)
+        original = root / 'Ελληνικά.mp3'
+        original.write_bytes(b'untouched')
+        cancelled = threading.Event()
+        def scanned(folders, files, current):
+            cancelled.set()
+        try:
+            create_preview(root, recursive=False, rename_folders=False,
+                           scan_progress=scanned, should_cancel=cancelled.is_set)
+            return 23  # expected to abort before delivering a preview
+        except ScanCancelled:
+            pass
+        if original.read_bytes() != b'untouched' or list(root.glob('greeklish_rename_log*')):
+            return 24
+        from user_preferences import save as persist, load as restore, Preferences as Pref
+        settings = root / 'app_settings.json'
+        if not persist(Pref(str(root), 'MP3 only', '.mp3'), settings):
+            return 25
+        if restore(settings).file_type_preset != 'MP3 only':
+            return 26
     return 0
 
 
@@ -168,11 +191,13 @@ class GreeklishWindow(WindowLayoutMixin):
         except tk.TclError:
             pass
 
-        self.folder = tk.StringVar(value=str(initial_folder or Path.home()))
+        self.preferences = load_preferences()
+        restored = self.preferences.last_folder if not initial_folder else str(initial_folder)
+        self.folder = tk.StringVar(value=str(restored or Path.home()))
         self.recursive = tk.BooleanVar(value=False)
         self.rename_folders = tk.BooleanVar(value=False)
-        self.extension_preset = tk.StringVar(value='All file types')
-        self.custom_file_types = tk.StringVar(value='.mp3, .flac')
+        self.extension_preset = tk.StringVar(value=self.preferences.file_type_preset)
+        self.custom_file_types = tk.StringVar(value=self.preferences.custom_file_types)
         self.scanning_counter = (0, 0)
         self.scan_last_update = 0.0
         self.filter_text = tk.StringVar()
@@ -188,6 +213,8 @@ class GreeklishWindow(WindowLayoutMixin):
         self.manual_targets: dict[int, Path] = {}
         self.extension_overrides: set[int] = set()
         self.stop_event = threading.Event()
+        self.scan_cancel_event = threading.Event()
+        self._settings_timer = None
         self.current_operation = None
         self.last_log: Path | None = None
         self.processing = False
@@ -205,20 +232,36 @@ class GreeklishWindow(WindowLayoutMixin):
         self._layout()
         self._bind_events()
         self.root.protocol('WM_DELETE_WINDOW', self._on_close)
-        self.root.after(80, self._drain_messages)
+        self._drain_timer = self.root.after(80, self._drain_messages)
 
     def _bind_events(self):
-        self.folder.trace_add('write', lambda *_: self._invalidate())
+        self.folder.trace_add('write', lambda *_: (self._invalidate(), self._schedule_settings_save()))
         self.recursive.trace_add('write', lambda *_: self._change_recursion())
         self.tree.bind('<ButtonRelease-1>', self._row_click)
         self.tree.bind('<Double-1>', self._row_double_click)
         self.tree.bind('<space>', self._keyboard_toggle)
         self.tree.bind('<<TreeviewSelect>>', lambda *_: self._sync_controls())
         self.rename_folders.trace_add('write', lambda *_: self._invalidate())
-        self.extension_preset.trace_add('write', lambda *_: self._file_type_changed())
-        self.custom_file_types.trace_add('write', lambda *_: self._custom_type_changed())
+        self.extension_preset.trace_add('write', lambda *_: (self._file_type_changed(), self._schedule_settings_save()))
+        self.custom_file_types.trace_add('write', lambda *_: (self._custom_type_changed(), self._schedule_settings_save()))
         self.filter_text.trace_add('write', lambda *_: self._render_filtered_rows())
         self.view_filter.trace_add('write', lambda *_: self._render_filtered_rows())
+
+    def _schedule_settings_save(self):
+        # Debounce text input; all Tk calls are on the UI thread.
+        if self._settings_timer is not None:
+            self.root.after_cancel(self._settings_timer)
+        self._settings_timer = self.root.after(700, self._save_settings)
+
+    def _save_settings(self):
+        self._settings_timer = None
+        from user_preferences import safe_folder
+        folder = safe_folder(self.folder.get().strip().strip('"'))
+        if folder:
+            self.preferences = Preferences(folder, self.extension_preset.get(), self.custom_file_types.get())
+        else:
+            self.preferences = Preferences(self.preferences.last_folder, self.extension_preset.get(), self.custom_file_types.get())
+        save_preferences(self.preferences)
 
     def _change_recursion(self):
         if not self.recursive.get() and self.rename_folders.get():
@@ -272,6 +315,8 @@ class GreeklishWindow(WindowLayoutMixin):
         self.toggle_btn.configure(state='normal' if has_preview else 'disabled')
         self.toggle_btn.configure(text='Select None' if has_preview and all(self.checked.values())
                                   else 'Select All')
+        self.cancel_scan_btn.configure(state='normal' if self.processing and self.current_operation == 'PREVIEW'
+                                        and not self.scan_cancel_event.is_set() else 'disabled')
         self.stop_btn.configure(state='normal' if self.processing and self.current_operation == 'APPLY'
                                 and not self.stop_event.is_set() else 'disabled')
         self.search_entry.configure(state='normal' if not self.processing else 'disabled')
@@ -360,7 +405,12 @@ class GreeklishWindow(WindowLayoutMixin):
 
     def _on_close(self):
         if self.processing:
-            if self.current_operation == 'APPLY':
+            if self.current_operation == 'PREVIEW':
+                if messagebox.askyesno('Scan in progress',
+                       'Cancel the scan? No filenames have been changed.\n\n'
+                       'The app will stay open until scanning stops.', parent=self.root):
+                    self._request_scan_cancel()
+            elif self.current_operation == 'APPLY':
                 if messagebox.askyesno('Rename still running',
                          'Renaming is in progress. Close is disabled to protect the undo log.\n\n'
                          'Request a safe stop after the current file?', parent=self.root):
@@ -370,7 +420,21 @@ class GreeklishWindow(WindowLayoutMixin):
                      'A scan or restore operation is still running. The window will stay open.',
                      parent=self.root)
             return
+        if self._settings_timer is not None:
+            self.root.after_cancel(self._settings_timer)
+        if self._drain_timer is not None:
+            self.root.after_cancel(self._drain_timer)
+            self._drain_timer = None
+        self._save_settings()
         self.root.destroy()
+
+    def _request_scan_cancel(self):
+        if not self.processing or self.current_operation != 'PREVIEW':
+            return
+        self.scan_cancel_event.set()
+        self.summary.set('Cancelling scan… no files have been modified.')
+        self.apply_meter_label.set('Cancelling scan…')
+        self._sync_controls()
 
     def _request_stop(self):
         if not self.processing or self.current_operation != 'APPLY':
@@ -549,8 +613,19 @@ class GreeklishWindow(WindowLayoutMixin):
                 self.progress_bar.configure(mode='determinate')
             self.processing = False
             self.current_operation = None
-            if kind == 'failure':
-                if label == 'APPLY' and isinstance(value, PreviewChangedError):
+            if kind == 'failure' and label == 'PREVIEW' and isinstance(value, ScanCancelled):
+                self.current_preview = None
+                self.tree.delete(*self.tree.get_children())
+                self.checked.clear()
+                self.manual_targets.clear()
+                self.extension_overrides.clear()
+                self.state.set('SCAN CANCELLED')
+                self.summary.set('Scan cancelled. No changes were applied.')
+                self.counter.set('0 proposed changes')
+                self.apply_meter_label.set('Scan cancelled')
+                self.progress.set('Scan cancelled safely. No filenames changed.')
+            elif kind == 'failure':
+                if label == 'APPLY'  and isinstance(value, PreviewChangedError):
                     self._invalidate()
                 self.state.set('ERROR')
                 self.summary.set(str(value))
@@ -598,7 +673,7 @@ class GreeklishWindow(WindowLayoutMixin):
                 self.progress.set('Run Preview to see any remaining Greek filenames.')
                 messagebox.showinfo('Undo result', f'Restored {restored} of {total} recorded paths.\nIf not all rows were restored, check for missing files or occupied original names.', parent=self.root)
             self._sync_controls()
-        self.root.after(80, self._drain_messages)
+        self._drain_timer = self.root.after(80, self._drain_messages)
 
     def _preview(self):
         path = self.folder.get().strip().strip('"')
@@ -610,6 +685,7 @@ class GreeklishWindow(WindowLayoutMixin):
             messagebox.showerror('File-type filter', str(exc), parent=self.root)
             return
         self.scanning_counter = (0, 0)
+        self.scan_cancel_event.clear()
         self.scan_last_update = 0.0
         self.apply_meter.set(0)
         self.apply_meter_label.set('Scanning folders…')
@@ -631,7 +707,8 @@ class GreeklishWindow(WindowLayoutMixin):
                 latest[:] = [folders, files, current]
                 report(folders, files, current)
             answer = create_preview(path, recursive=recursive, rename_folders=rename_folders,
-                                    file_extensions=extensions, scan_progress=tracked_report)
+                                    file_extensions=extensions, scan_progress=tracked_report,
+                                    should_cancel=self.scan_cancel_event.is_set)
             if latest[0]:
                 self.messages.put(('scan_progress', 'PREVIEW', tuple(latest)))
             return answer

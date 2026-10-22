@@ -175,6 +175,8 @@ class WindowLayoutMixin:
         buttons.pack(fill='x', pady=(10, 0))
         self.preview_btn = self._button(buttons, 'Preview changes', self._preview, main=True, width=17)
         self.preview_btn.pack(side='left')
+        self.cancel_scan_btn = self._button(buttons, 'Cancel scan', self._request_scan_cancel, width=12)
+        self.cancel_scan_btn.pack(side='left', padx=(9, 0))
         self.edit_btn = self._button(buttons, 'Edit selected…', self._edit_selected, width=14)
         self.edit_btn.pack(side='left', padx=(9, 0))
         self.apply_btn = self._button(buttons, 'Apply renames', self._apply, width=14)

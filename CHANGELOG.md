@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.4.0 (2026-10-22)
+- Persist the last valid folder and selected file-type preset/custom extensions in an atomic, local settings JSON; restore safely without auto-renaming.
+- Add read-only scan cancellation, active Close protection, and no partial previews or rename logs when cancelled.
+- Improve Tkinter lifecycle cleanup and test remembered preferences, scan cancellation, and large folder trees.
+- Clarify that a genuine modern Windows 11 Explorer menu requires a signed native COM/MSIX extension; keep the reversible classic context menu as fallback until package signing and shell testing are available.
+
 ## v2.3.0 (2026-10-22)
 - Added History… browser of undo CSV runs saved in the selected folder, with recorded-name preview and explicitly confirmed undo.
 - Added atomic no-replace protection to rename and undo operations on Windows and Linux; safe failure on unsupported filesystems.

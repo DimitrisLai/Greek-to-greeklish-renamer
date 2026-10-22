@@ -35,7 +35,7 @@ def _configure_unicode_console() -> None:
 
 _configure_unicode_console()
 
-VERSION = "2.3.0"
+VERSION = "2.4.0"
 
 # Modern Greek -> ASCII transcription, inspired by ELOT 743 / ISO 843.
 # This is NOT a certified, fully reversible implementation: accents are removed.
@@ -166,13 +166,24 @@ def is_link_or_junction(path: Path) -> bool:
         return True
 
 
+class ScanCancelled(RuntimeError):
+    """Cooperative scan cancellation; never returns a partially built preview."""
+
+
 def plan_renames(root: Path, recursive: bool = False, files_only: bool = False, *,
-                 file_extensions: frozenset[str] | None = None, scan_progress=None) -> list[tuple[Path, Path]]:
+                 file_extensions: frozenset[str] | None = None, scan_progress=None,
+                 should_cancel=None) -> list[tuple[Path, Path]]:
     """Produce a deterministic bottom-up plan; never change Latin-only names."""
     root = Path(root)
     plan: list[tuple[Path, Path]] = []
     scanned_folders = 0
     scanned_files = 0
+
+    def check_cancel():
+        if should_cancel is not None and should_cancel():
+            raise ScanCancelled('Scan cancelled. No files were renamed.')
+
+    check_cancel()
 
     def report_scan(folder: Path, file_count: int) -> None:
         nonlocal scanned_folders, scanned_files
@@ -192,6 +203,7 @@ def plan_renames(root: Path, recursive: bool = False, files_only: bool = False, 
         for folder_string, folders, files in os.walk(
             root, topdown=True, followlinks=False, onerror=on_scan_error
         ):
+            check_cancel()
             folder = Path(folder_string)
             safe_folders = [
                 name for name in folders
@@ -204,7 +216,12 @@ def plan_renames(root: Path, recursive: bool = False, files_only: bool = False, 
     else:
         try:
             with os.scandir(root) as entries:
-                files = [entry.name for entry in entries if entry.is_file(follow_symlinks=False)]
+                files = []
+                for i, entry in enumerate(entries):
+                    if i % 64 == 0:
+                        check_cancel()
+                    if entry.is_file(follow_symlinks=False):
+                        files.append(entry.name)
         except OSError as exc:
             print(f"[SKIP] Cannot open folder {root}: {exc}")
             return []
@@ -212,6 +229,7 @@ def plan_renames(root: Path, recursive: bool = False, files_only: bool = False, 
         walk = [(str(root), [], files)]
 
     for folder_string, folders, files in walk:
+        check_cancel()
         folder = Path(folder_string)
         try:
             occupied = {item.name.casefold() for item in folder.iterdir()}
@@ -221,7 +239,9 @@ def plan_renames(root: Path, recursive: bool = False, files_only: bool = False, 
         items = [(name, False) for name in files]
         if recursive and not files_only:
             items.extend((name, True) for name in folders)
-        for name, is_dir in sorted(items, key=lambda item: (item[0].casefold(), item[0])):
+        for index, (name, is_dir) in enumerate(sorted(items, key=lambda item: (item[0].casefold(), item[0]))):
+            if index % 64 == 0:
+                check_cancel()
             if not is_dir and file_extensions is not None and Path(name).suffix.casefold() not in file_extensions:
                 continue
             if not contains_greek_letters(name):
@@ -235,6 +255,7 @@ def plan_renames(root: Path, recursive: bool = False, files_only: bool = False, 
             chosen = available_name(desired, occupied, is_dir)
             occupied.add(chosen.casefold())
             plan.append((old, folder / chosen))
+    check_cancel()
     return plan
 
 

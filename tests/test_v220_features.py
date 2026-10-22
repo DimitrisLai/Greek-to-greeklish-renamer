@@ -143,14 +143,14 @@ class PackagingContractTests(unittest.TestCase):
     def test_icon_and_version_resource_present(self):
         root = Path(__file__).resolve().parents[1]
         self.assertTrue((root/'scripts/generate_icon.py').is_file())
-        self.assertIn('Pillow', (root/'.github/workflows/release-v2.3.0.yml').read_text('utf-8'))
+        self.assertIn('Pillow', (root/'.github/workflows/release-v2.4.0.yml').read_text('utf-8'))
         metadata=(root/'packaging/windows_version_info.txt').read_text('utf-8')
-        for value in ('Greek to Greeklish Renamer', '2.3.0.0', 'Dimitris Laidis'):
+        for value in ('Greek to Greeklish Renamer', '2.4.0.0', 'Dimitris Laidis'):
             self.assertIn(value, metadata)
 
     def test_release_checksum_rules_present(self):
         root=Path(__file__).resolve().parents[1]
-        flow=(root/'.github/workflows/release-v2.3.0.yml').read_text('utf-8')
+        flow=(root/'.github/workflows/release-v2.4.0.yml').read_text('utf-8')
         for value in ('--icon', '--version-file', 'SHA256SUMS.txt', 'sha256sum -c'):
             self.assertIn(value, flow)
 

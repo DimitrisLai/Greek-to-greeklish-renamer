@@ -1,4 +1,4 @@
-GREEK TO GREEKLISH RENAMER v2.3.0
+GREEK TO GREEKLISH RENAMER v2.4.0
 Created by Dimitris Laidis | MIT License
 
 WINDOWS DESKTOP APP (no Python needed)
@@ -36,7 +36,7 @@ that parent folder too, so the excluded file's location remains unchanged.
 PREVIOUS FEATURES (v2.1.2): Search/filter proposed filenames; edit names with extensions protected by default; Stop safely between renames; see a complete Results report with an automatically saved CSV.
 Do not close the window while renames are running. Use Stop safely instead. Undo logs include completed changes only.
 
-NEW IN 2.3.0:
+INTRODUCED IN 2.2.0:
 - Use File Types: All, Audio, MP3, FLAC, WAV or Custom (.mp3, .flac).
 - Scanning shows a moving indicator and number of folders/files inspected.
 - Explorer menu... lets you install or remove an optional folder context-menu command.
@@ -48,3 +48,12 @@ NEW IN 2.3.0:
 
 HISTORY (v2.3.0): Click History… to browse undo logs in your chosen folder, inspect names, and restore a chosen run after typing UNDO.
 CSV SAFETY: Informational preview and results exports protect formula-like filenames. Undo logs retain exact paths.
+
+NEW IN 2.4.0:
+- The program remembers the last valid selected folder and file-type preset/custom extension list.
+  Stored locally at %LOCALAPPDATA%\GreeklishRenamer\settings.json (Windows).
+  The app NEVER scans or renames automatically just because settings were remembered.
+- During Preview changes, click Cancel scan to stop a long read-only scan; no partial preview or rename.
+  The Stop safely button is for rename/apply and is deliberately separate.
+- Windows 11: the available optional right-click entry is CLASSIC (Show more options).
+  A genuine modern top-level menu requires an additional signed extension package and is not shipped in v2.4.0.
