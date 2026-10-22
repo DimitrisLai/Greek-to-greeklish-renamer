@@ -90,7 +90,7 @@ class FilterTests(unittest.TestCase):
         self.assertEqual(len(updates), 3)
         self.assertEqual([x[0] for x in updates], [1, 2, 3])
         self.assertEqual(updates[-1][1], 3)
-        self.assertEqual(updates[0][2], self.root)
+        self.assertEqual(updates[0][2].resolve(), self.root.resolve())
 
     def test_nonrecursive_scan_reports_once(self):
         self.put('Άλλο.mp3')

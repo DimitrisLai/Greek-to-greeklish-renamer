@@ -169,3 +169,5 @@ jobs:
 # CI gate: safe stopping, result reports, extension lock, filters, and undo are tested on Windows.
 
 # Windows alias regression: normalize extension-override source paths before comparison.
+
+# Windows CI: normalize temporary-path aliases when comparing scanned folders.
