@@ -148,3 +148,5 @@ jobs:
           gh release view v2.1.2 --json tagName,assets --jq '{tag: .tagName,assets: [.assets[].name]}'
 
 # CI gate: safe stopping, result reports, extension lock, filters, and undo are tested on Windows.
+
+# Windows alias regression: normalize extension-override source paths before comparison.

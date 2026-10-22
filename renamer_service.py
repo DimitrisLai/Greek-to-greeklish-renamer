@@ -86,6 +86,9 @@ def validate_selection(preview: RenamePreview, selected: Iterable[Operation], *,
     indirectly moved by a selected folder rename.
     """
     original = {old: new for old, new in preview.operations}
+    # Windows temporary directories and user selections may use 8.3 aliases;
+    # resolve extension-override source paths just as we resolve selected rows.
+    approved_extensions = {Path(path).resolve(strict=False) for path in extension_overrides}
     choices: dict[Path, Path] = {}
     for submitted_old, submitted_new in selected:
         # Windows temp directories sometimes use 8.3 aliases (RUNNER~1).
@@ -98,7 +101,7 @@ def validate_selection(preview: RenamePreview, selected: Iterable[Operation], *,
         if new.parent.resolve(strict=False) != old.parent:
             raise InvalidSelectionError('Edit the filename only; moving files to other directories is not supported.')
         validate_new_filename(new.name, original=old.name,
-                              allow_extension_change=old.is_dir() or old in extension_overrides)
+                              allow_extension_change=old.is_dir() or old in approved_extensions)
         choices[old] = old.with_name(new.name)
     if not choices:
         raise InvalidSelectionError('No rows selected. Tick one or more rows before applying.')

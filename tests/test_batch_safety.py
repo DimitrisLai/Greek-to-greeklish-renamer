@@ -49,6 +49,19 @@ class BatchSafetyTests(unittest.TestCase):
         self.assertEqual((self.root/'Custom.wav').read_bytes(), b'same bytes')
         self.assertEqual(restore_log(self.root, report.log), (1, 1))
 
+    def test_extension_override_accepts_equivalent_path_alias(self):
+        original = self.add('Ελληνικά.mp3')
+        preview = self.preview()
+        # An equivalent but unnormalized spelling reproduces Windows' short
+        # vs long temp path discrepancy without requiring a Windows runner.
+        equivalent = original.parent / '..' / original.parent.name / original.name
+        report = execute_preview_report(preview,
+            ((original,original.with_name('Custom.wav')),),
+            extension_overrides={equivalent})
+        self.assertEqual(report.renamed_count, 1)
+        self.assertTrue((self.root/'Custom.wav').exists())
+        self.assertEqual(restore_log(self.root, report.log), (1, 1))
+
     def test_folder_dots_are_not_treated_as_extensions(self):
         self.add('Μουσική.2026/Τραγούδι.mp3')
         p = self.preview(recursive=True, rename_folders=True)
