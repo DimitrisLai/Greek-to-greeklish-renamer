@@ -1,11 +1,16 @@
 # Changelog
 
+## v2.3.0 (2026-10-22)
+- Added History… browser of undo CSV runs saved in the selected folder, with recorded-name preview and explicitly confirmed undo.
+- Added atomic no-replace protection to rename and undo operations on Windows and Linux; safe failure on unsupported filesystems.
+- Protected informational preview/results CSV exports from spreadsheet formula interpretation, retaining lossless legacy undo CSVs.
+- Added regression tests for history parsing, malicious/external CSV paths, overwrite races and CSV sanitization.
+- Preserved audio filters, scan/apply progress, Explorer integration, version metadata and original CLI.
+
 ## v2.2.0 (2026-10-22)
-- Optional file-type filters, including custom extension lists.
-- Indeterminate scan progress with folder and file counters.
-- Branded Windows application icon, version resource, SHA-256 release digests.
-- Opt-in, uninstallable, per-user Explorer folder right-click integration (preview-only).
-- Preserved selective renaming, manual edits, undo, safe stop and CLI.
+- Added file-type filters, custom extension lists and animated scan progress.
+- Added Windows icon and product version metadata, SHA-256 release digests.
+- Added optional per-user Explorer right-click preview integration.
 
 ## [2.1.1] — 2026-10-22
 

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Iterable, Tuple, Callable, Collection
 
 from rename_greek_to_greeklish import apply_plan, is_link_or_junction, plan_renames, undo
+from csv_safety import spreadsheet_cell
 
 Operation = tuple[Path, Path]
 
@@ -214,8 +215,9 @@ class RenameReport:
             writer = csv.writer(out)
             writer.writerow(['status', 'reason', 'original_relative_path', 'proposed_relative_path'])
             for row in self.rows:
-                writer.writerow([row.status, row.reason, str(row.old.relative_to(self.root)),
-                                 str(row.new.relative_to(self.root))])
+                writer.writerow([spreadsheet_cell(row.status), spreadsheet_cell(row.reason),
+                                 spreadsheet_cell(str(row.old.relative_to(self.root))),
+                                 spreadsheet_cell(str(row.new.relative_to(self.root)))])
 
 
 def execute_preview_report(preview: RenamePreview, selected: Iterable[Operation], *,

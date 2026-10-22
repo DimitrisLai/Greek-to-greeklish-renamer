@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Produce the public v2.2.0 user manual (build-time dependency: ReportLab)."""
+"""Produce the public v2.3.0 user manual (build-time dependency: ReportLab)."""
 from __future__ import annotations
 
 import argparse
@@ -13,7 +13,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
-VERSION = '2.2.0'
+VERSION = '2.3.0'
 AUTHOR = 'Dimitris Laidis'
 REPO = 'github.com/DimitrisLai/Greek-to-greeklish-renamer'
 W, H = A4
@@ -153,10 +153,10 @@ def make(out:Path):
     c.drawString(62,H-350,'Keep English filenames untouched.')
     c.setStrokeColor(TEAL);c.setLineWidth(3);c.line(62,H-398,228,H-398)
     c.setFillColor(HexColor('#BCD1DE'));c.setFont('Lato',10.2)
-    c.drawString(62,H-454,'File-type filters  /  Scan progress  /  CSV undo')
-    c.drawString(62,H-477,'Explorer menu  /  Standalone EXE  /  Safe stop')
+    c.drawString(62,H-454,'Rename history  /  Collision protection  /  CSV undo')
+    c.drawString(62,H-477,'Safe exports  /  Standalone EXE  /  Safe stop')
     c.setFont('LatoB',11);c.setFillColor(CYAN)
-    c.drawString(62,103,'VERSION 2.2.0  /  OPEN SOURCE  /  MIT LICENSE')
+    c.drawString(62,103,'VERSION 2.3.0  /  OPEN SOURCE  /  MIT LICENSE')
     c.setFillColor(HexColor('#ADBECD'));c.setFont('Lato',10)
     c.drawString(62,78,'Created by Dimitris Laidis')
     c.drawString(62,56,REPO)
@@ -171,7 +171,7 @@ def make(out:Path):
        ('<b>PDF User Manual</b>','This document; also included in the Windows ZIP.')],y,[179,CW-179],size=9.3)
     y=section(c,'Your first scan in six steps',y)
     y=bullets(c,[
-       '<b>1.</b> Download the Windows ZIP from the v2.2.0 GitHub Release.',
+       '<b>1.</b> Download the Windows ZIP from the v2.3.0 GitHub Release.',
        '<b>2.</b> Right-click the ZIP and choose <b>Extract All</b>.',
        '<b>3.</b> Double-click <b>GreeklishRenamer.exe</b>.',
        '<b>4.</b> Browse to a test folder with a few Greek filenames.',
@@ -193,7 +193,8 @@ def make(out:Path):
         ('<b>Edit selected…</b>','Edit a proposed name. File extensions are protected unless you explicitly opt into advanced changes.'),
         ('<b>Find / Show filters</b>','Search original or proposed paths; show All, Included, Excluded or Edited. Selection remains unchanged.'),
         ('<b>Apply / Stop safely</b>','Apply checked names, or request a safe stop between filenames. Window closing is blocked while busy.'),
-        ('<b>Results / Undo</b>','Review per-file outcomes and reasons. Auto-save results CSV and keep the separate undo CSV.')
+        ('<b>Results / Undo</b>','Review per-file outcomes and reasons. Keep the separate undo CSV.'),
+        ('<b>History…</b>','Browse undo logs saved in the selected folder, inspect their entries and request a confirmed undo.')
     ],y,[196,CW-196],size=8.85)
     y=note(c,'Important detail','File-type filtering restricts eligible files, not merely visibility. When a type filter is active, folder renaming is disabled to protect unrelated files. Search/Show only hides rows; checkboxes remain unchanged.',y)
     check(y,'interface page');c.showPage()
@@ -266,10 +267,12 @@ def make(out:Path):
     y=section(c,'Restoring names',y)
     y=bullets(c,[
        'Keep the <b>greeklish_rename_log_YYYYMMDD_HHMMSS_microseconds.csv</b> created in the chosen folder.',
-       'Click <b>Undo from CSV</b> and select the log from the run you want to reverse.',
+       'Click <b>History…</b> to list the recent undo logs in the selected folder and review their entries.',
+       'Choose <b>Undo selected run</b> from History or <b>Undo from CSV</b> for an older external log.',
        'The separate <b>greeklish_result_log_*.csv</b> lists success, skipped, failed, excluded and not processed with reasons.',
        'Verify that the folder is correct, then type the exact word <b>UNDO</b>.',
-       'A safe stop interrupts between files; the undo log includes only successfully renamed paths. Reverse-order undo skips occupied/missing paths.'
+       'Atomic no-overwrite moves prevent accidental replacement if a destination becomes occupied. Undo also refuses occupied original names.',
+       'Preview and results CSV exports escape spreadsheet formula-like cells. Undo CSVs retain exact names for reliable restoration.'
     ],y)
     y=note(c,'Undo is not an independent backup','Do not delete your separate backups until you verify the results. A crash, locked file, moved directory, concurrent changes or filesystem error can prevent full restoration.',y)
     check(y,'safety page');c.showPage()
@@ -302,6 +305,7 @@ def make(out:Path):
        ('Folder changed before apply','Run Preview again; the stale plan is intentionally rejected.'),
        ('Access denied / locked file','Close music players, editors or sync clients. Check permissions and try again.'),
        ('Undo restores only some rows','Review the CSV and check for moved/missing files or occupied original names.'),
+       ('History is empty','Choose the original target folder. History only shows undo CSVs located directly inside that folder.'),
        ('Source GUI fails to start','Confirm Python 3.10+ includes Tkinter. Use the standalone EXE if Python is not available.')
     ],y,[151,CW-151],size=8.8)
     y=note(c,'Windows build disclaimer','The GitHub workflow tests the engine on Windows and Linux and builds a Windows EXE. You should still smoke-test launching and renaming on your own Windows desktop.',y)
@@ -311,7 +315,7 @@ def make(out:Path):
     y=title(c,9,'Project information','Release details, support channels and responsible use.')
     y=table(c,['ITEM','DETAIL'],[
        ('Project','Greek to Greeklish Renamer'),
-       ('Release','v2.2.0 — Windows Integration & Filtered Scans'),
+       ('Release','v2.3.0 — History & Collision Safety'),
        ('Author','Dimitris Laidis / GitHub: DimitrisLai'),
        ('License','MIT (source code); dependencies keep their respective terms'),
        ('Source runtime','Python 3.10+, standard library (Tkinter)'),
@@ -319,13 +323,13 @@ def make(out:Path):
        ('Repository',REPO),
        ('Support','GitHub Issues (use fictional example filenames)')
     ],y,[156,CW-156],size=9.1)
-    y=section(c,'New in version 2.2.0',y)
+    y=section(c,'New in version 2.3.0',y)
     y=bullets(c,[
-       'Filter eligible filenames to audio, MP3, FLAC, WAV, or custom extensions.',
-       'Watch an animated scan indicator with live folders/files inspected.',
-       'Install or remove optional per-user Explorer integration; previews only.',
-       'Windows icon and version details; verify releases using SHA256SUMS.txt.',
-       'Keep existing safe stop, selective renames, CSV results and undo.'
+       'Browse a folder-specific history of previous rename runs without manually finding CSV files.',
+       'Inspect recorded changes and choose a run for confirmed Undo within the app.',
+       'Protect destinations from concurrent overwrite using atomic no-replace moves.',
+       'Harden preview/results CSV for spreadsheet formulas while keeping undo logs lossless.',
+       'Keep extension filters, Explorer integration, safe stop and SHA256SUMS verification.'
     ],y)
     y=note(c,'Privacy and responsible use','The application operates locally. It does not upload filenames or file data. Keep separate backups, verify previews and avoid posting private folder paths in public issue reports.',y)
     check(y,'project page');c.showPage()

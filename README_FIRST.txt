@@ -1,4 +1,4 @@
-GREEK TO GREEKLISH RENAMER v2.2.0
+GREEK TO GREEKLISH RENAMER v2.3.0
 Created by Dimitris Laidis | MIT License
 
 WINDOWS DESKTOP APP (no Python needed)
@@ -36,7 +36,7 @@ that parent folder too, so the excluded file's location remains unchanged.
 PREVIOUS FEATURES (v2.1.2): Search/filter proposed filenames; edit names with extensions protected by default; Stop safely between renames; see a complete Results report with an automatically saved CSV.
 Do not close the window while renames are running. Use Stop safely instead. Undo logs include completed changes only.
 
-NEW IN 2.2.0:
+NEW IN 2.3.0:
 - Use File Types: All, Audio, MP3, FLAC, WAV or Custom (.mp3, .flac).
 - Scanning shows a moving indicator and number of folders/files inspected.
 - Explorer menu... lets you install or remove an optional folder context-menu command.
@@ -45,3 +45,6 @@ NEW IN 2.2.0:
 - Windows icon/version details identify the EXE.
 - Check SHA256SUMS.txt from the official GitHub release to verify downloads.
 - File-type filtering disables folder renaming to protect unrelated files.
+
+HISTORY (v2.3.0): Click History… to browse undo logs in your chosen folder, inspect names, and restore a chosen run after typing UNDO.
+CSV SAFETY: Informational preview and results exports protect formula-like filenames. Undo logs retain exact paths.

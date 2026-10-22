@@ -6,7 +6,7 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Python tests](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/actions/workflows/tests.yml/badge.svg)](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/actions/workflows/tests.yml)
 
-**Version 2.2.0 · Created by Dimitris Laidis · MIT License**
+**Version 2.3.0 · Created by Dimitris Laidis · MIT License**
 
 ## Download
 
@@ -19,7 +19,7 @@ The **Windows ZIP** contains `GreeklishRenamer.exe` (no Python required), `READM
 The release includes `SHA256SUMS.txt` with SHA-256 digests of the Windows ZIP, Source ZIP and PDF. In PowerShell, run:
 
 ```powershell
-(Get-FileHash .\Greeklish-Renamer-v2.2.0-Windows-Dimitris-Laidis.zip -Algorithm SHA256).Hash
+(Get-FileHash .\Greeklish-Renamer-v2.3.0-Windows-Dimitris-Laidis.zip -Algorithm SHA256).Hash
 ```
 
 Compare the result with the official release `SHA256SUMS.txt`. Hashes confirm file integrity against the published manifest, not independent code-signing trust. Signing is a separate process.
@@ -46,12 +46,15 @@ Compare the result with the official release `SHA256SUMS.txt`. Hashes confirm fi
 - **Stop safely** can interrupt a large batch **between** file operations. The app does not exit during an active rename; attempting to close the window offers a safe stop. Completed renames stay recorded in the undo CSV.
 - **Detailed results window and CSV** after Apply: renamed, skipped, failed, excluded, and not processed with per-file reasons. A separate `greeklish_result_log_*.csv` is saved automatically next to the undo log; the results window can also export a copy.
 - Prevent collisions with numbered suffixes such as `(2)` and `(3)`.
+- **History…** lists up to 200 recent undo CSVs saved directly in the selected folder. Select a run to inspect its original and renamed paths (up to 2,000 preview entries) and click **Undo selected run…** to restore after typing `UNDO`. History is read-only until that confirmation; it is not a system-wide database.
+- **Atomic no-overwrite moves** prevent replacing an existing destination even if another program creates it between validation and renaming; incompatible filesystems fail safely. Undo uses the same protection.
+- **Spreadsheet-safe informational CSV exports** prefix formula-like filenames in preview/results exports. Undo CSVs deliberately preserve exact paths to ensure reliable restoration; treat those logs as data rather than opening unknown logs in spreadsheet applications.
 - **Undo from CSV** using the log generated during the rename; require exact `UNDO` confirmation.
 - Skip symlinks, junctions and Windows reparse points. Preserve file contents.
 
 ### First use
 
-1. Download the [v2.2.0 Windows ZIP](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.2.0) and extract it.
+1. Download the [v2.3.0 Windows ZIP](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.3.0) and extract it.
 2. Double-click **GreeklishRenamer.exe**.
 3. Click **Browse…** and choose a small folder to test.
 4. Choose All files or a custom file type, then click **Preview changes**. The scan indicator shows live folder/file counts.
@@ -102,7 +105,7 @@ GitHub Actions runs regression tests on **Windows and Linux** using **Python 3.1
 
 ## Documentation and support
 
-- [PDF User Manual — v2.2.0](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.2.0) (included with the Windows ZIP)
+- [PDF User Manual — v2.3.0](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.3.0) (included with the Windows ZIP)
 - [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [MIT License](LICENSE)
 - [Report an issue](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/issues) using fictional filenames and nonsensitive paths
 

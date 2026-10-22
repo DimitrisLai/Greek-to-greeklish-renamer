@@ -9,6 +9,9 @@ Logs each completed change, allowing reverse-order undo of a run.
 from __future__ import annotations
 
 import argparse
+import errno
+import ctypes
+import ctypes.util
 import csv
 import os
 import stat
@@ -32,7 +35,7 @@ def _configure_unicode_console() -> None:
 
 _configure_unicode_console()
 
-VERSION = "2.2.0"
+VERSION = "2.3.0"
 
 # Modern Greek -> ASCII transcription, inspired by ELOT 743 / ISO 843.
 # This is NOT a certified, fully reversible implementation: accents are removed.
@@ -279,7 +282,7 @@ def undo(root: Path, log_file: Path, *, confirmed: bool = False) -> tuple[int, i
             print(f"[SKIP] Already occupied: {old}")
             continue
         try:
-            new.rename(old)
+            rename_no_overwrite(new, old)
             print(f"[UNDO] {new.relative_to(root)} -> {old.relative_to(root)}")
             restored += 1
         except OSError as exc:
@@ -326,6 +329,33 @@ def choose_recursion() -> bool:
         print("Please type Y or N.")
 
 
+def rename_no_overwrite(old: Path, new: Path) -> None:
+    """Atomically refuse an occupied destination, even in a filesystem race.
+
+    Windows os.rename already refuses replacement; Linux renameat2 with
+    RENAME_NOREPLACE supplies the same property for both files and folders.
+    Other POSIX systems fail closed rather than risk overwriting data.
+    """
+    if os.name == 'nt':
+        os.rename(old, new)
+        return
+    if sys.platform.startswith('linux'):
+        libc = ctypes.CDLL(None, use_errno=True)
+        renameat2 = getattr(libc, 'renameat2', None)
+        if renameat2 is not None:
+            renameat2.argtypes = [ctypes.c_int, ctypes.c_char_p,
+                                  ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+            renameat2.restype = ctypes.c_int
+            rc = renameat2(-100, os.fsencode(old), -100, os.fsencode(new), 1)
+            if rc == 0:
+                return
+            error = ctypes.get_errno()
+            if error not in (errno.ENOSYS, errno.EINVAL, errno.EOPNOTSUPP):
+                raise OSError(error, os.strerror(error), str(new))
+    raise OSError(errno.ENOTSUP,
+                  'Atomic no-overwrite rename is not supported on this filesystem.', str(new))
+
+
 def apply_plan(root: Path, plan: list[tuple[Path, Path]], *, progress_callback=None,
                result_callback=None, stop_requested: Callable[[], bool] | None = None) -> tuple[int, Path]:
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
@@ -351,12 +381,14 @@ def apply_plan(root: Path, plan: list[tuple[Path, Path]], *, progress_callback=N
                     print(f"[SKIP] Destination taken: {new}")
                 else:
                     try:
-                        old.rename(new)
+                        rename_no_overwrite(old, new)
                         writer.writerow([str(old.relative_to(root)), str(new.relative_to(root))])
                         handle.flush()
                         renamed += 1
                     except OSError as exc:
-                        status, reason = 'failed', f'{type(exc).__name__}: {exc}'
+                        status = 'skipped' if isinstance(exc, FileExistsError) or exc.errno == errno.EEXIST else 'failed'
+                        reason = ('Destination became occupied during rename' if status == 'skipped'
+                                  else f'{type(exc).__name__}: {exc}')
                         print(f"[ERROR] {old.name}: {exc}")
             finally:
                 completed += 1

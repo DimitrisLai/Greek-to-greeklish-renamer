@@ -128,12 +128,13 @@ class BatchSafetyTests(unittest.TestCase):
                  (b,self.root/'Athina.mp3'),
                  (c,self.root/'Kosmos.mp3')]
         (self.root/'Athina.mp3').write_bytes(b'occupied')
-        old_rename=Path.rename
+        from rename_greek_to_greeklish import rename_no_overwrite
+        old_rename=rename_no_overwrite
         def rename(path,destination):
             if path == c:
                 raise PermissionError('locked by music player')
             return old_rename(path,destination)
-        with mock.patch('pathlib.Path.rename', autospec=True, side_effect=rename):
+        with mock.patch('rename_greek_to_greeklish.rename_no_overwrite', side_effect=rename):
             done=[]
             with redirect_stdout(io.StringIO()):
                 n,log=apply_plan(self.root,actions,result_callback=lambda *args: done.append(args))
