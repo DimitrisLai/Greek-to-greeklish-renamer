@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Greek to Greeklish Renamer 2.1 — native Windows desktop UI.
+"""Greek to Greeklish Renamer 2.1.1 — native Windows desktop UI.
 
 Built with Python's standard-library Tkinter. No Tk calls occur on worker threads.
 The existing command-line renamer remains available separately.
@@ -12,6 +12,7 @@ import queue
 import sys
 import tempfile
 import threading
+import time
 from pathlib import Path
 
 # PyInstaller --windowed sets the standard streams to None on Windows.
@@ -85,6 +86,8 @@ class GreeklishWindow:
         self.counter = tk.StringVar(value='0 proposed changes')
         self.state = tk.StringVar(value='READY')
         self.progress = tk.StringVar(value='No files have been modified.')
+        self.apply_meter = tk.DoubleVar(value=0)
+        self.apply_meter_label = tk.StringVar(value='')
         self.current_preview: RenamePreview | None = None
         self.checked: dict[int, bool] = {}
         self.manual_targets: dict[int, Path] = {}
@@ -92,6 +95,8 @@ class GreeklishWindow:
         self.processing = False
         self.messages: queue.Queue = queue.Queue()
         self._configure_style()
+        self.checkbox_yes = self._checkbox_icon(True)
+        self.checkbox_no = self._checkbox_icon(False)
         self._layout()
         self._bind_events()
         self.root.after(80, self._drain_messages)
@@ -110,6 +115,21 @@ class GreeklishWindow:
         self.style.map('Greek.TCheckbutton', background=[('active', PAPER)])
         self.style.configure('Greek.Horizontal.TProgressbar', troughcolor=BORDER,
                              background=TEAL, bordercolor=BORDER, thickness=5)
+
+    def _checkbox_icon(self, enabled: bool) -> tk.PhotoImage:
+        """Draw a genuine checkbox graphic; Unicode checkbox glyphs vary by font."""
+        icon = tk.PhotoImage(master=self.root, width=20, height=20)
+        background = WHITE
+        border = TEAL if enabled else '#8798A7'
+        icon.put(background, to=(0, 0, 20, 20))
+        icon.put(border, to=(2, 2, 18, 18))
+        icon.put(TEAL if enabled else WHITE, to=(4, 4, 16, 16))
+        if enabled:
+            # Thick rasterized white check mark inside the filled square.
+            for x, y in [(6, 10), (7, 11), (8, 12), (9, 13),
+                         (10, 12), (11, 11), (12, 10), (13, 9), (14, 8)]:
+                icon.put(WHITE, to=(x, y, x + 2, y + 2))
+        return icon
 
     def _button(self, parent, label, callback, *, main=False, width=14):
         bg = TEAL if main else WHITE
@@ -165,19 +185,19 @@ class GreeklishWindow:
                  font=(FONT, 10, 'bold')).pack(side='left')
         tk.Label(heading, textvariable=self.counter, bg=PAPER, fg=TEAL,
                  font=(FONT, 10, 'bold')).pack(side='right')
-        self.none_btn = self._button(heading, 'Select None', self._select_none, width=11)
-        self.none_btn.pack(side='right', padx=(0, 8))
-        self.all_btn = self._button(heading, 'Select All', self._select_all, width=10)
-        self.all_btn.pack(side='right', padx=(0, 7))
+        self.toggle_btn = self._button(heading, 'Select None', self._toggle_all, width=13)
+        self.toggle_btn.pack(side='right', padx=(0, 12))
 
         tablewrap = tk.Frame(frame, bg=WHITE, highlightthickness=1, highlightbackground=BORDER)
         tablewrap.pack(fill='both', expand=True)
         tablewrap.grid_rowconfigure(0, weight=1)
         tablewrap.grid_columnconfigure(0, weight=1)
-        self.tree = ttk.Treeview(tablewrap, style='Greek.Treeview', show='headings',
-                                 columns=('checked', 'kind', 'before', 'after'))
-        self.tree.heading('checked', text='USE')
-        self.tree.column('checked', width=62, minwidth=62, stretch=False, anchor='center')
+        # The native Treeview #0 column supports a per-row checkbox image.
+        # Unlike a text glyph, this stays visible with Windows system fonts.
+        self.tree = ttk.Treeview(tablewrap, style='Greek.Treeview', show='tree headings',
+                                 columns=('kind', 'before', 'after'))
+        self.tree.heading('#0', text='INCLUDE')
+        self.tree.column('#0', width=100, minwidth=94, stretch=False, anchor='w')
         self.tree.heading('kind', text='TYPE')
         self.tree.heading('before', text='CURRENT PATH')
         self.tree.heading('after', text='PROPOSED PATH')
@@ -203,8 +223,17 @@ class GreeklishWindow:
         tk.Label(status, textvariable=self.summary, bg=PAPER, fg=MUTED,
                  font=(FONT, 9)).pack(side='left', padx=14)
 
+        meter_row = tk.Frame(frame, bg=PAPER)
+        meter_row.pack(fill='x', pady=(10, 0))
+        self.progress_bar = ttk.Progressbar(meter_row, style='Greek.Horizontal.TProgressbar',
+                                            maximum=100, variable=self.apply_meter,
+                                            mode='determinate')
+        self.progress_bar.pack(side='left', fill='x', expand=True, ipady=4)
+        tk.Label(meter_row, textvariable=self.apply_meter_label, bg=PAPER, fg=TEAL,
+                 font=(FONT, 9, 'bold'), width=34, anchor='e').pack(side='right', padx=(10, 0))
+
         buttons = tk.Frame(frame, bg=PAPER)
-        buttons.pack(fill='x', pady=(14, 0))
+        buttons.pack(fill='x', pady=(10, 0))
         self.preview_btn = self._button(buttons, 'Preview changes', self._preview, main=True, width=17)
         self.preview_btn.pack(side='left')
         self.edit_btn = self._button(buttons, 'Edit selected…', self._edit_selected, width=14)
@@ -260,8 +289,9 @@ class GreeklishWindow:
         self.apply_btn.configure(state='normal' if may_apply else 'disabled')
         self.export_btn.configure(state='normal' if has_preview else 'disabled')
         self.edit_btn.configure(state='normal' if has_preview and self.tree.selection() else 'disabled')
-        self.all_btn.configure(state='normal' if has_preview else 'disabled')
-        self.none_btn.configure(state='normal' if has_preview else 'disabled')
+        self.toggle_btn.configure(state='normal' if has_preview else 'disabled')
+        self.toggle_btn.configure(text='Select None' if has_preview and all(self.checked.values())
+                                  else 'Select All')
 
 
     def _display_name(self, index: int) -> Path:
@@ -302,15 +332,16 @@ class GreeklishWindow:
         tags = (('excluded',) if not self.checked[index] else
                 ('custom',) if index in self.manual_targets else
                 ('odd',) if index % 2 else ())
-        self.tree.item(str(index), values=('☑' if self.checked[index] else '☐',
-                         'Folder' if old.is_dir() else 'File',
-                         str(old.relative_to(preview.root)),
-                         str(new.relative_to(preview.root))), tags=tags)
+        self.tree.item(str(index), image=self.checkbox_yes if self.checked[index]
+                       else self.checkbox_no, text='Yes' if self.checked[index] else 'No',
+                       values=('Folder' if old.is_dir() else 'File',
+                               str(old.relative_to(preview.root)),
+                               str(new.relative_to(preview.root))), tags=tags)
 
     def _row_click(self, event):
         if self.processing or self.current_preview is None:
             return
-        if self.tree.identify_column(event.x) != '#1':
+        if self.tree.identify_column(event.x) != '#0':
             return
         row_id = self.tree.identify_row(event.y)
         if row_id and row_id.isdigit():
@@ -321,7 +352,7 @@ class GreeklishWindow:
         if self.processing or self.current_preview is None:
             return
         row_id = self.tree.identify_row(event.y)
-        if row_id and self.tree.identify_column(event.x) != '#1':
+        if row_id and self.tree.identify_column(event.x) != '#0':
             self.tree.selection_set(row_id)
             self._edit_selected()
 
@@ -334,23 +365,16 @@ class GreeklishWindow:
                 self._set_check(i, not self.checked[i])
         return 'break'
 
-    def _select_all(self):
+    def _toggle_all(self):
         if self.current_preview is None or self.processing:
             return
+        select_everything = not all(self.checked.values())
         for i in self.checked:
-            self.checked[i] = True
+            self.checked[i] = select_everything
             self._refresh_row(i)
         self._refresh_counter()
-        self.summary.set('All proposed changes selected.')
-
-    def _select_none(self):
-        if self.current_preview is None or self.processing:
-            return
-        for i in self.checked:
-            self.checked[i] = False
-            self._refresh_row(i)
-        self._refresh_counter()
-        self.summary.set('Nothing selected. Check the rows you want to rename.')
+        self.summary.set('All proposed changes selected.' if select_everything else
+                         'Nothing selected. Tick individual rows to include them.')
 
     def _edit_selected(self):
         if self.processing or self.current_preview is None:
@@ -418,13 +442,22 @@ class GreeklishWindow:
                 kind, label, value = self.messages.get_nowait()
             except queue.Empty:
                 break
+            if kind == 'progress':
+                done, total, succeeded = value
+                self.apply_meter.set(100 * done / total if total else 0)
+                self.apply_meter_label.set(f'{done:,}/{total:,}  •  {100 * done / total:.0f}%')
+                self.progress.set(f'Processed {done:,} of {total:,} names  •  {succeeded:,} renamed')
+                self.state.set('APPLYING')
+                continue
             self.processing = False
             if kind == 'failure':
                 if label == 'APPLY' and isinstance(value, PreviewChangedError):
                     self._invalidate()
                 self.state.set('ERROR')
                 self.summary.set(str(value))
-                self.progress.set(f'No confirmed completion: {value}')
+                if label == 'APPLY':
+                    self.apply_meter_label.set('Interrupted — review the CSV log')
+                self.progress.set(f'Operation error: {value}')
                 messagebox.showerror('Operation not completed', str(value), parent=self.root)
             elif label == 'PREVIEW':
                 self.current_preview = value
@@ -438,6 +471,8 @@ class GreeklishWindow:
                 self.state.set('PREVIEW READY' if value.count else 'NO CHANGES')
                 self.summary.set('Untick to skip; double-click or select a row and Edit to change its proposed name.' if value.count else 'No names containing Greek letters need renaming.')
                 self.progress.set('Preview only. No files have been modified.')
+                self.apply_meter.set(0)
+                self.apply_meter_label.set('')
             elif label == 'APPLY':
                 renamed, log, count = value
                 self.current_preview = None
@@ -447,7 +482,9 @@ class GreeklishWindow:
                 self.state.set('COMPLETE' if renamed == count else 'PARTIAL')
                 self.counter.set(f'{renamed:,} of {count:,} renamed')
                 self.summary.set(f'CSV undo log: {log.name}')
-                self.progress.set(f'{renamed}/{count} renamed  •  log: {log}')
+                self.apply_meter.set(100)
+                self.apply_meter_label.set(f'{count:,}/{count:,} processed  •  100%')
+                self.progress.set(f'{renamed:,}/{count:,} renamed  •  log: {log}')
                 messagebox.showinfo('Rename completed' if renamed == count else 'Partial completion',
                                     f'{renamed} of {count} names renamed.\n\nUndo log:\n{log}\n\nKeep the CSV until you have checked the results.',
                                     parent=self.root)
@@ -485,7 +522,22 @@ class GreeklishWindow:
                     f'Rename {count} files/folders in:\n{preview.root}\n\nThis changes names, not file contents.\nA CSV undo log will be created.\n\nProceed?',
                     icon='warning', parent=self.root, default='no'):
             return
-        self._start('APPLY', lambda: (*execute_preview(preview, selected=selected), count))
+        self.apply_meter.set(0)
+        self.apply_meter_label.set(f'0/{count:,} processed  •  0%')
+        self.progress.set(f'Applying selected renames: 0 of {count:,} processed…')
+
+        def worker():
+            last_update = [0.0]
+            def report(done: int, total: int, renamed: int) -> None:
+                now = time.monotonic()
+                # Throttle UI notifications for large batches; show first,
+                # last, and updates roughly every 70ms while rename proceeds.
+                if done == 1 or done == total or now - last_update[0] >= 0.07:
+                    last_update[0] = now
+                    self.messages.put(('progress', 'APPLY', (done, total, renamed)))
+            renamed, log = execute_preview(preview, selected=selected, progress_callback=report)
+            return renamed, log, count
+        self._start('APPLY', worker)
 
     def _export(self):
         plan = self.current_preview

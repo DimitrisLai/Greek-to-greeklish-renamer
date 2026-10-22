@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.1] — 2026-10-22
+
+- Replaced the two bulk-selection buttons with one dynamic **Select All / Select None** toggle.
+- Replaced font-dependent checkboxes with a visible per-row checkbox image in the INCLUDE column.
+- Added a determinate progress bar and processed/total, percent and successful rename counters while Apply runs.
+- Progress callbacks also count skipped attempts correctly; CLI and CSV undo remain backward compatible.
+- Optimized collision validation for large batches by caching sibling names per directory.
+- Added progress-focused regression tests, including a 1,000-file selective rename and undo test.
+- Updated Windows source and build documentation and the 10-page PDF manual.
+
 ## [2.1.0] — 2026-10-22
 
 - Added per-row checkboxes to selectively apply proposed renames (all checked by default).

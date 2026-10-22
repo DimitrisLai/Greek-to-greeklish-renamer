@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Produce the public v2.1.0 user manual (build-time dependency: ReportLab)."""
+"""Produce the public v2.1.1 user manual (build-time dependency: ReportLab)."""
 from __future__ import annotations
 
 import argparse
@@ -13,7 +13,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
-VERSION = '2.1.0'
+VERSION = '2.1.1'
 AUTHOR = 'Dimitris Laidis'
 REPO = 'github.com/DimitrisLai/Greek-to-greeklish-renamer'
 W, H = A4
@@ -153,10 +153,10 @@ def make(out:Path):
     c.drawString(62,H-350,'Keep English filenames untouched.')
     c.setStrokeColor(TEAL);c.setLineWidth(3);c.line(62,H-398,228,H-398)
     c.setFillColor(HexColor('#BCD1DE'));c.setFont('Lato',10.2)
-    c.drawString(62,H-454,'Selectable preview  /  Manual name editing  /  CSV undo')
-    c.drawString(62,H-477,'Simple interface  /  Standalone Windows EXE')
+    c.drawString(62,H-454,'Per-file checkboxes  /  Manual name editing  /  CSV undo')
+    c.drawString(62,H-477,'Live progress bar  /  Standalone Windows EXE')
     c.setFont('LatoB',11);c.setFillColor(CYAN)
-    c.drawString(62,103,'VERSION 2.1.0  /  OPEN SOURCE  /  MIT LICENSE')
+    c.drawString(62,103,'VERSION 2.1.1  /  OPEN SOURCE  /  MIT LICENSE')
     c.setFillColor(HexColor('#ADBECD'));c.setFont('Lato',10)
     c.drawString(62,78,'Created by Dimitris Laidis')
     c.drawString(62,56,REPO)
@@ -171,7 +171,7 @@ def make(out:Path):
        ('<b>PDF User Manual</b>','This document; also included in the Windows ZIP.')],y,[179,CW-179],size=9.3)
     y=section(c,'Your first scan in six steps',y)
     y=bullets(c,[
-       '<b>1.</b> Download the Windows ZIP from the v2.1.0 GitHub Release.',
+       '<b>1.</b> Download the Windows ZIP from the v2.1.1 GitHub Release.',
        '<b>2.</b> Right-click the ZIP and choose <b>Extract All</b>.',
        '<b>3.</b> Double-click <b>GreeklishRenamer.exe</b>.',
        '<b>4.</b> Browse to a test folder with a few Greek filenames.',
@@ -189,7 +189,7 @@ def make(out:Path):
         ('<b>Include subdirectories</b>','Process files within nested folders; off by default.'),
         ('<b>Also rename Greek folder names</b>','Optional and only available when subdirectories are included.'),
         ('<b>Preview changes</b>','Build a read-only plan with current paths and proposed names.'),
-        ('<b>Select All / Select None</b>','Check or uncheck all proposals; every row starts checked.'),
+        ('<b>Select All / Select None toggle</b>','One toggle switches between Select None (all checked) and Select All (otherwise).'),
         ('<b>Edit selected…</b>','Select a row or double-click it to edit the proposed filename only.'),
         ('<b>Apply renames</b>','Confirm, validate selected names and log changes actually performed.'),
         ('<b>Export preview</b>','Save the proposed changes to CSV without modifying files.'),
@@ -209,10 +209,10 @@ def make(out:Path):
     ],y,[62,191,CW-253],size=9.1)
     y=section(c,'Choose, correct and apply only what you want',y)
     y=bullets(c,[
-       'Every candidate starts with a checked box. Click a checkbox, or press Space on a selected row, to skip/include it.',
-       'Use <b>Select All</b> and <b>Select None</b> for larger collections.',
+       'Every candidate starts with a visible checkbox in the INCLUDE column. Click it, or press Space on a highlighted row, to skip or include that item.',
+       'One button above the table switches between <b>Select None</b> (all checked) and <b>Select All</b> (otherwise).',
        'Select a row and click <b>Edit selected</b>, or double-click the row, to customize its proposed filename.',
-       'Pressing <b>Apply renames</b> confirms and applies <b>only checked rows</b>.',
+       'Pressing <b>Apply renames</b> confirms and applies <b>only checked rows</b>. Follow the live progress bar, percent and processed/renamed counters.',
        'Before applying, the tool recomputes the plan. If the folder changed, the operation is rejected and a new preview is required.',
        'Skip child changes safely: uncheck the parent folder when a child is excluded.',
        'The CSV undo log contains only completed changes. Export preview includes selected/edited flags.',
@@ -295,6 +295,8 @@ def make(out:Path):
        ('The EXE does not open','Extract the ZIP first. Windows SmartScreen may prompt on an unsigned community-built EXE; download only from the official GitHub Release.'),
        ('Nothing found','Check the selected folder and subdirectory option. Only names containing Greek letters qualify.'),
        ('Apply is disabled','Run Preview and check at least one row; changing options clears the preview.'),
+        ('Bulk selection seems wrong','Use the checkbox in INCLUDE for a single row; the one bulk button switches between Select All and Select None.'),
+        ('Progress looks slow','The percent tracks completed attempts. Locked or missing files can be skipped and appear in the final count.'),
        ('Edited name is rejected','Use a unique name in the same folder, without reserved Windows characters.'),
        ('Unchecked child blocks Apply','Uncheck the selected parent folder too, or explicitly select the child.'),
        ('Folder changed before apply','Run Preview again; the stale plan is intentionally rejected.'),
@@ -309,7 +311,7 @@ def make(out:Path):
     y=title(c,9,'Project information','Release details, support channels and responsible use.')
     y=table(c,['ITEM','DETAIL'],[
        ('Project','Greek to Greeklish Renamer'),
-       ('Release','v2.1.0 — Selective Renaming'),
+       ('Release','v2.1.1 — Selective Renaming'),
        ('Author','Dimitris Laidis / GitHub: DimitrisLai'),
        ('License','MIT (source code); dependencies keep their respective terms'),
        ('Source runtime','Python 3.10+, standard library (Tkinter)'),
@@ -317,12 +319,12 @@ def make(out:Path):
        ('Repository',REPO),
        ('Support','GitHub Issues (use fictional example filenames)')
     ],y,[156,CW-156],size=9.1)
-    y=section(c,'What is new in version 2.1.0?',y)
+    y=section(c,'New in version 2.1.1',y)
     y=bullets(c,[
-       'Choose which proposed filenames to rename using per-row checkboxes and Select All / None.',
+       'Use visible per-file checkboxes and one dynamic Select All / Select None button.',
        'Edit a selected row (or double-click) to fix incorrect transliterations manually.',
        'Prevent duplicate destinations, invalid names and unintended excluded child moves.',
-       'Export CSV with selection and edit markers; Undo logs only performed changes.',
+       'Follow the live progress bar during large batches; Undo logs only completed changes.',
        'Existing CLI, original conversion engine and v2.0.0 release remain available.'
     ],y)
     y=note(c,'Privacy and responsible use','The application operates locally. It does not upload filenames or file data. Keep separate backups, verify previews and avoid posting private folder paths in public issue reports.',y)

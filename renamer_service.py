@@ -98,11 +98,17 @@ def validate_selection(preview: RenamePreview, selected: Iterable[Operation]) ->
         raise InvalidSelectionError('No rows selected. Tick one or more rows before applying.')
 
     targets: set[tuple[str, str]] = set()
+    # Large batches may contain thousands of files in one directory: scan its
+    # siblings once instead of once per file (quadratic on Windows disks).
+    siblings_by_parent: dict[Path, set[str]] = {}
     for old, new in choices.items():
         if not old.exists() or is_link_or_junction(old):
             raise PreviewChangedError('A source has changed or disappeared. Run Preview again.')
         try:
-            siblings = {entry.name.casefold() for entry in os.scandir(old.parent)}
+            if old.parent not in siblings_by_parent:
+                with os.scandir(old.parent) as entries:
+                    siblings_by_parent[old.parent] = {entry.name.casefold() for entry in entries}
+            siblings = siblings_by_parent[old.parent]
         except OSError as exc:
             raise PreviewChangedError(f'Cannot inspect a folder: {exc}') from exc
         if new.name.casefold() in siblings:
@@ -125,13 +131,14 @@ def validate_selection(preview: RenamePreview, selected: Iterable[Operation]) ->
     return tuple((old, choices[old]) for old, _ in preview.operations if old in choices)
 
 
-def execute_preview(preview: RenamePreview, selected: Iterable[Operation] | None = None) -> tuple[int, Path]:
+def execute_preview(preview: RenamePreview, selected: Iterable[Operation] | None = None,
+                    *, progress_callback=None) -> tuple[int, Path]:
     """Recheck the *full* original preview and validate the selected edited subset."""
     updated = create_preview(preview.root, recursive=preview.recursive, rename_folders=preview.rename_folders)
     if updated.operations != preview.operations:
         raise PreviewChangedError('The directory contents changed. Run Preview again before renaming.')
     plan = validate_selection(preview, preview.operations if selected is None else selected)
-    return apply_plan(preview.root, list(plan))
+    return apply_plan(preview.root, list(plan), progress_callback=progress_callback)
 
 
 def restore_log(folder: str | Path, csv_file: str | Path) -> tuple[int, int]:

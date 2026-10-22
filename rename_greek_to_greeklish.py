@@ -31,7 +31,7 @@ def _configure_unicode_console() -> None:
 
 _configure_unicode_console()
 
-VERSION = "2.1.0"
+VERSION = "2.1.1"
 
 # Modern Greek -> ASCII transcription, inspired by ELOT 743 / ISO 843.
 # This is NOT a certified, fully reversible implementation: accents are removed.
@@ -311,7 +311,7 @@ def choose_recursion() -> bool:
         print("Please type Y or N.")
 
 
-def apply_plan(root: Path, plan: list[tuple[Path, Path]]) -> tuple[int, Path]:
+def apply_plan(root: Path, plan: list[tuple[Path, Path]], *, progress_callback=None) -> tuple[int, Path]:
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     logfile = root / f"greeklish_rename_log_{stamp}.csv"
     renamed = 0
@@ -319,20 +319,26 @@ def apply_plan(root: Path, plan: list[tuple[Path, Path]]) -> tuple[int, Path]:
         writer = csv.writer(handle)
         writer.writerow(["old_relative_path", "new_relative_path"])
         handle.flush()
-        for old, new in plan:
-            if not is_occupied(old):
-                print(f"[SKIP] Source missing: {old}")
-                continue
-            if is_occupied(new):
-                print(f"[SKIP] Destination taken: {new}")
-                continue
+        for completed, (old, new) in enumerate(plan, start=1):
             try:
-                old.rename(new)
-                writer.writerow([str(old.relative_to(root)), str(new.relative_to(root))])
-                handle.flush()
-                renamed += 1
-            except OSError as exc:
-                print(f"[ERROR] {old.name}: {exc}")
+                if not is_occupied(old):
+                    print(f"[SKIP] Source missing: {old}")
+                    continue
+                if is_occupied(new):
+                    print(f"[SKIP] Destination taken: {new}")
+                    continue
+                try:
+                    old.rename(new)
+                    writer.writerow([str(old.relative_to(root)), str(new.relative_to(root))])
+                    handle.flush()
+                    renamed += 1
+                except OSError as exc:
+                    print(f"[ERROR] {old.name}: {exc}")
+            finally:
+                # Count processed operations even when a file was skipped.
+                # The callback never changes the rename decision or CSV log.
+                if progress_callback is not None:
+                    progress_callback(completed, len(plan), renamed)
     return (renamed, logfile)
 
 

@@ -1,4 +1,4 @@
-GREEK TO GREEKLISH RENAMER v2.1.0
+GREEK TO GREEKLISH RENAMER v2.1.1
 Created by Dimitris Laidis | MIT License
 
 WINDOWS DESKTOP APP (no Python needed)
@@ -10,8 +10,10 @@ WINDOWS DESKTOP APP (no Python needed)
 5. Click Preview changes and review the table.
 6. All preview rows start checked. Untick rows that must stay unchanged.
 7. Select a row and click Edit selected (or double-click it) to manually fix the proposed name.
-8. Use Select All / Select None for bulk selection.
+8. Use the single Select None / Select All toggle above the preview table.
+   Click an INCLUDE checkbox to toggle a single file independently.
 9. Click Apply renames only after reviewing selected changes.
+   Watch the live progress bar, percentage and processed/renamed counters.
 10. Keep the CSV undo log created inside the selected folder.
 
 The application only changes FILE AND FOLDER NAMES. It does not change media
