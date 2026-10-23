@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Produce the public v2.4.0 user manual (build-time dependency: ReportLab)."""
+"""Produce the public v2.5.0 user manual (build-time dependency: ReportLab)."""
 from __future__ import annotations
 
 import argparse
@@ -13,7 +13,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
-VERSION = '2.4.0'
+VERSION = '2.5.0'
 AUTHOR = 'Dimitris Laidis'
 REPO = 'github.com/DimitrisLai/Greek-to-greeklish-renamer'
 W, H = A4
@@ -156,7 +156,7 @@ def make(out:Path):
     c.drawString(62,H-454,'Remembered settings  /  Cancel scan  /  History')
     c.drawString(62,H-477,'Safe renaming  /  Undo  /  Standalone EXE')
     c.setFont('LatoB',11);c.setFillColor(CYAN)
-    c.drawString(62,103,'VERSION 2.4.0  /  OPEN SOURCE  /  MIT LICENSE')
+    c.drawString(62,103,'VERSION 2.5.0  /  OPEN SOURCE  /  MIT LICENSE')
     c.setFillColor(HexColor('#ADBECD'));c.setFont('Lato',10)
     c.drawString(62,78,'Created by Dimitris Laidis')
     c.drawString(62,56,REPO)
@@ -171,7 +171,7 @@ def make(out:Path):
        ('<b>PDF User Manual</b>','This document; also included in the Windows ZIP.')],y,[179,CW-179],size=9.3)
     y=section(c,'Your first scan in six steps',y)
     y=bullets(c,[
-       '<b>1.</b> Download the Windows ZIP from the v2.4.0 GitHub Release.',
+       '<b>1.</b> Download the Windows ZIP from the v2.5.0 GitHub Release.',
        '<b>2.</b> Right-click the ZIP and choose <b>Extract All</b>.',
        '<b>3.</b> Double-click <b>GreeklishRenamer.exe</b>.',
        '<b>4.</b> Browse to a test folder with a few Greek filenames.',
@@ -194,7 +194,7 @@ def make(out:Path):
         ('<b>Find / Show filters</b>','Search original or proposed paths; show All, Included, Excluded or Edited. Selection remains unchanged.'),
         ('<b>Apply / Stop safely</b>','Apply checked names, or request a safe stop between filenames. Window closing is blocked while busy.'),
         ('<b>Results / Undo</b>','Review per-file outcomes and reasons. Keep the separate undo CSV.'),
-        ('<b>History…</b>','Browse undo logs saved in the selected folder, inspect their entries and request a confirmed undo.')
+        ('<b>History / Black theme</b>','Review undo logs or switch between Light and Black appearance without losing your preview; your theme choice is saved.')
     ],y,[196,CW-196],size=8.85)
     y=paragraph(c,'<b>Safety:</b> Saved settings never start a scan automatically; filtered views do not alter selections.',y,size=8.8,leading=13)-9
     check(y,'interface page');c.showPage()
@@ -316,7 +316,7 @@ def make(out:Path):
     y=title(c,9,'Project information','Release details, support channels and responsible use.')
     y=table(c,['ITEM','DETAIL'],[
        ('Project','Greek to Greeklish Renamer'),
-       ('Release','v2.4.0 — Remembered Settings & Cancel Scan'),
+       ('Release','v2.5.0 — Remembered Settings & Cancel Scan'),
        ('Author','Dimitris Laidis / GitHub: DimitrisLai'),
        ('License','MIT (source code); dependencies keep their respective terms'),
        ('Source runtime','Python 3.10+, standard library (Tkinter)'),
