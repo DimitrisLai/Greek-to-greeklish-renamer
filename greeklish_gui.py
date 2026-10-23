@@ -43,6 +43,7 @@ from explorer_integration import register as register_explorer, unregister as un
 from gui_theme import *  # shared palette and extension presets
 from user_preferences import Preferences, load as load_preferences, save as save_preferences
 from gui_layout import WindowLayoutMixin
+from theme_support import colorize, configure_ttk, recolor_preview_tags
 
 
 def check_headless_build() -> int:
@@ -148,6 +149,7 @@ class EditNameDialog(simpledialog.Dialog):
 
     def body(self, master):
         ttk.Label(master, text=f'Original: {self.source.name}', wraplength=480).pack(anchor='w', pady=(4, 12))
+        muted = '#abbacd' if getattr(self.parent, '_greeklish_theme', 'Light') == 'Black' else MUTED
         ttk.Label(master, text='Proposed filename / folder name:').pack(anchor='w')
         self.name_var = tk.StringVar(value=self.proposed)
         self.name_entry = ttk.Entry(master, textvariable=self.name_var, width=57)
@@ -159,12 +161,16 @@ class EditNameDialog(simpledialog.Dialog):
             self.advanced.pack(anchor='w')
             ttk.Label(master, text=f'Protected extension: {self.source.suffix or "(none)"}. '
                        'Keep the extension unchanged unless explicitly enabled.',
-                       foreground=MUTED, wraplength=480).pack(anchor='w', pady=(8, 4))
+                       foreground=muted, wraplength=480).pack(anchor='w', pady=(8, 4))
         else:
             self.allow_var.set(True)
             ttk.Label(master, text='Folder names can include periods.',
-                      foreground=MUTED).pack(anchor='w', pady=(6, 4))
+                      foreground=muted).pack(anchor='w', pady=(6, 4))
         return self.name_entry
+
+    def buttonbox(self):
+        super().buttonbox()
+        colorize(self, getattr(self.parent, '_greeklish_theme', 'Light'))
 
     def validate(self):
         try:
@@ -192,6 +198,9 @@ class GreeklishWindow(WindowLayoutMixin):
             pass
 
         self.preferences = load_preferences()
+        self.appearance = self.preferences.appearance
+        self.root._greeklish_theme = self.appearance
+        self._theme_originals = {}
         restored = self.preferences.last_folder if not initial_folder else str(initial_folder)
         self.folder = tk.StringVar(value=str(restored or Path.home()))
         self.recursive = tk.BooleanVar(value=False)
@@ -230,9 +239,29 @@ class GreeklishWindow(WindowLayoutMixin):
         self.checkbox_yes = self._checkbox_icon(True)
         self.checkbox_no = self._checkbox_icon(False)
         self._layout()
+        self._apply_appearance()
         self._bind_events()
         self.root.protocol('WM_DELETE_WINDOW', self._on_close)
         self._drain_timer = self.root.after(80, self._drain_messages)
+
+    def _apply_appearance(self):
+        """Repaint existing widgets; do not rescan or discard the preview."""
+        self.root._greeklish_theme = self.appearance
+        configure_ttk(self.style, self.appearance)
+        colorize(self.root, self.appearance, self._theme_originals)
+        recolor_preview_tags(self.tree, self.appearance)
+        self.checkbox_yes = self._checkbox_icon(True)
+        self.checkbox_no = self._checkbox_icon(False)
+        for iid in self.tree.get_children():
+            self._refresh_row(int(iid))
+        self.theme_btn.configure(text='Light theme' if self.appearance == 'Black' else 'Black theme')
+
+    def _toggle_appearance(self):
+        if self.processing:
+            return
+        self.appearance = 'Light' if self.appearance == 'Black' else 'Black'
+        self._apply_appearance()
+        self._schedule_settings_save()
 
     def _bind_events(self):
         self.folder.trace_add('write', lambda *_: (self._invalidate(), self._schedule_settings_save()))
@@ -258,9 +287,9 @@ class GreeklishWindow(WindowLayoutMixin):
         from user_preferences import safe_folder
         folder = safe_folder(self.folder.get().strip().strip('"'))
         if folder:
-            self.preferences = Preferences(folder, self.extension_preset.get(), self.custom_file_types.get())
+            self.preferences = Preferences(folder, self.extension_preset.get(), self.custom_file_types.get(), self.appearance)
         else:
-            self.preferences = Preferences(self.preferences.last_folder, self.extension_preset.get(), self.custom_file_types.get())
+            self.preferences = Preferences(self.preferences.last_folder, self.extension_preset.get(), self.custom_file_types.get(), self.appearance)
         save_preferences(self.preferences)
 
     def _change_recursion(self):
@@ -297,7 +326,7 @@ class GreeklishWindow(WindowLayoutMixin):
 
     def _sync_controls(self):
         state = 'disabled' if self.processing else 'normal'
-        for btn in (self.browse_btn, self.preview_btn, self.undo_btn, self.history_btn):
+        for btn in (self.browse_btn, self.preview_btn, self.undo_btn, self.history_btn, self.theme_btn):
             btn.configure(state=state)
         allow_folders = self.recursive.get() and self.extension_preset.get() == 'All file types'
         self.folder_check.configure(state='normal' if allow_folders and not self.processing else 'disabled')
