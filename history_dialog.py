@@ -5,6 +5,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
 from history_service import list_history, read_history
+from theme_support import colorize
 
 PAPER = '#F5F8FC'
 NAVY = '#101E32'
@@ -69,6 +70,7 @@ class HistoryDialog(tk.Toplevel):
         self._entries = ()
         self._selected_log = None
         self._populate()
+        colorize(self, getattr(parent, '_greeklish_theme', 'Light'))
         self.grab_set()
 
     def _populate(self):
