@@ -18,6 +18,7 @@ class Preferences:
     last_folder: str = ''
     file_type_preset: str = 'All file types'
     custom_file_types: str = '.mp3, .flac'
+    appearance: str = 'Light'
 
 
 def settings_path(*, home: Path | None = None) -> Path:
@@ -59,8 +60,11 @@ def sanitize(raw: object) -> Preferences:
         parse_extensions(custom)
     except ValueError:
         custom = '.mp3, .flac'
+    appearance = raw.get('appearance', 'Light')
+    if appearance not in ('Light', 'Black'):
+        appearance = 'Light'
     return Preferences(safe_folder(raw.get('last_folder', '')),
-                       preset, custom)
+                       preset, custom, appearance)
 
 
 def load(path: Path | None = None) -> Preferences:
@@ -80,6 +84,7 @@ def save(preferences: Preferences, path: Path | None = None) -> bool:
         'last_folder': preferences.last_folder,
         'file_type_preset': preferences.file_type_preset,
         'custom_file_types': preferences.custom_file_types,
+        'appearance': preferences.appearance,
     })
     text = json.dumps({'schema_version': 1, **content.__dict__}, ensure_ascii=False, indent=2) + '\n'
     temporary = None
