@@ -8,6 +8,14 @@
 
 **Version 2.5.0 · Created by Dimitris Laidis · MIT License**
 
+## Project status — Feature-complete for 2026
+
+**v2.5.0 is the final planned feature release for 2026.** As of October 23, 2026, no further feature updates or scheduled releases are planned through **December 31, 2026**.
+
+The project remains **public, available to download, and MIT-licensed**. Issues and pull requests can still be submitted, but there is no commitment to a feature roadmap or a regular update schedule. Important security or critical bug fixes, compatibility corrections, or code-signing changes may be published if necessary. Development may be reconsidered in **2027**.
+
+This is a **feature-complete / maintenance-only status**, not an archived or abandoned repository.
+
 ## Download
 
 **[Download the latest Windows ZIP, complete source ZIP and professional PDF manual](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/latest)**
