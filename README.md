@@ -6,7 +6,7 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Python tests](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/actions/workflows/tests.yml/badge.svg)](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/actions/workflows/tests.yml)
 
-**Version 2.4.0 · Created by Dimitris Laidis · MIT License**
+**Version 2.5.0 · Created by Dimitris Laidis · MIT License**
 
 ## Download
 
@@ -19,18 +19,27 @@ The **Windows ZIP** contains `GreeklishRenamer.exe` (no Python required), `READM
 The release includes `SHA256SUMS.txt` with SHA-256 digests of the Windows ZIP, Source ZIP and PDF. In PowerShell, run:
 
 ```powershell
-(Get-FileHash .\Greeklish-Renamer-v2.4.0-Windows-Dimitris-Laidis.zip -Algorithm SHA256).Hash
+(Get-FileHash .\Greeklish-Renamer-v2.5.0-Windows-Dimitris-Laidis.zip -Algorithm SHA256).Hash
 ```
 
 Compare the result with the official release `SHA256SUMS.txt`. Hashes confirm file integrity against the published manifest, not independent code-signing trust. Signing is a separate process.
 
-## New in v2.4.0
+## New in v2.5.0
+
+- **Black theme:** Switch instantly between Light and Black using the appearance button in the title area. This recolors the preview table, checkboxes, controls, history window and results window.
+- **Preference saved:** The last selected theme is restored on the next launch. Existing settings automatically default to Light.
+- **Zero rename side effects:** Changing appearance never performs a scan, alters checked rows, edits a proposed name, or changes any file or folder.
+- **Regression tested:** Theme switching is checked using a real Tkinter GUI under a Linux virtual desktop, plus cross-platform automated tests.
+
+## Previous v2.4.0 improvements
 
 - **Remembered choices:** The last valid folder, chosen file-type preset, and validated custom extension list are stored locally in `settings.json` under `%LOCALAPPDATA%\GreeklishRenamer` (Windows); no filenames or file contents are saved. Missing folders are ignored, and you always choose when to scan.
 - **Cancel scan:** During a long preview scan use **Cancel scan** or request cancellation when closing the window. Cancellation is cooperative and safe; it never applies any rename or returns a partial preview. This is separate from **Stop safely**, which stops during an already confirmed rename.
 - **Windows 11 modern context-menu status:** A genuine top-level Explorer extension needs a signed sparse/MSIX package and a native `IExplorerCommand` DLL. That deployment is **not part of v2.4.0** while signing/Windows shell tests remain unresolved. The existing **classic Explorer menu** still works via **Show more options**. See [native menu technical requirements](docs/WINDOWS_11_MODERN_MENU.md).
 
 ## Windows desktop interface
+
+Use the **Black theme / Light theme** button at the top to choose a dark or light appearance. The choice is remembered locally; this setting only affects the UI.
 
 - **Choose a directory** using Browse, a pasted path or the optional Explorer menu.
 - **Extension allow-list:** All, Audio (.mp3/.flac/.wav), MP3, FLAC, WAV or a custom list. While filtering, folder renaming is disabled so unrelated files do not move.
@@ -60,7 +69,7 @@ Compare the result with the official release `SHA256SUMS.txt`. Hashes confirm fi
 
 ### First use
 
-1. Download the [v2.4.0 Windows ZIP](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.4.0) and extract it.
+1. Download the [v2.4.0 Windows ZIP](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.5.0) and extract it.
 2. Double-click **GreeklishRenamer.exe**.
 3. Click **Browse…** and choose a small folder to test.
 4. Choose All files or a custom file type, then click **Preview changes**. The scan indicator shows live folder/file counts.
@@ -111,7 +120,7 @@ GitHub Actions runs regression tests on **Windows and Linux** using **Python 3.1
 
 ## Documentation and support
 
-- [PDF User Manual — v2.4.0](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.4.0) (included with the Windows ZIP)
+- [PDF User Manual — v2.5.0](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/releases/tag/v2.5.0) (included with the Windows ZIP)
 - [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [MIT License](LICENSE)
 - [Report an issue](https://github.com/DimitrisLai/Greek-to-greeklish-renamer/issues) using fictional filenames and nonsensitive paths
 
