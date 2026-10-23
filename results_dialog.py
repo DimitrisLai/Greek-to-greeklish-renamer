@@ -4,6 +4,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from renamer_service import RenameReport
+from theme_support import colorize
 
 PAPER = '#F5F8FC'
 NAVY = '#101E32'
@@ -60,6 +61,7 @@ class ResultsDialog(tk.Toplevel):
         tk.Button(buttons, text='Close', command=self.destroy,
                   font=(FONT, 10, 'bold'), padx=12, pady=8).pack(side='right')
         self.protocol('WM_DELETE_WINDOW', self.destroy)
+        colorize(self, getattr(parent, '_greeklish_theme', 'Light'))
         self.grab_set()
 
     def export(self):
