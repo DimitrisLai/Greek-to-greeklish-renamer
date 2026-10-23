@@ -174,3 +174,5 @@ jobs:
 # Windows alias regression: normalize extension-override source paths before comparison.
 
 # Windows CI: normalize temporary-path aliases when comparing scanned folders.
+
+# Theme release gate: unit tests, Tkinter smoke, Windows EXE smoke, PDF, and SHA-256 archives.
