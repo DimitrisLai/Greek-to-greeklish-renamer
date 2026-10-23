@@ -42,6 +42,7 @@ BLACK_FOREGROUND = {
     "#ffffff": "#ffffff",
     "#000000": "#e3ecf7",
     "black": "#e3ecf7",
+    "systembuttontext": "#e3ecf7",
 }
 
 
