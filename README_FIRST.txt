@@ -1,4 +1,4 @@
-GREEK TO GREEKLISH RENAMER v2.4.0
+GREEK TO GREEKLISH RENAMER v2.5.0
 Created by Dimitris Laidis | MIT License
 
 WINDOWS DESKTOP APP (no Python needed)
@@ -57,3 +57,8 @@ NEW IN 2.4.0:
   The Stop safely button is for rename/apply and is deliberately separate.
 - Windows 11: the available optional right-click entry is CLASSIC (Show more options).
   A genuine modern top-level menu requires an additional signed extension package and is not shipped in v2.4.0.
+
+NEW IN 2.5.0:
+- Click Black theme in the upper area of the window to switch to dark appearance.
+- Click Light theme to return. Your choice is remembered on the next launch.
+- Switching themes never changes the selected files, preview, or filenames.
