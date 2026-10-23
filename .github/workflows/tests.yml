@@ -23,3 +23,6 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Headless GUI smoke-test logic
         run: python greeklish_gui.py --self-test
+      - name: Exercise Black/Light theme with real Tk widgets (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a python tests/theme_gui_smoke.py
