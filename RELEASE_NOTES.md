@@ -2,6 +2,10 @@
 
 **Dimitris Laidis · MIT License**
 
+### Project status — final planned release of 2026
+
+Version **2.5.0** is considered **feature-complete**. No further feature updates or scheduled releases are planned for the remainder of **2026 (through December 31)**. The project remains publicly available under the MIT License and is not archived. Unplanned critical bug fixes, security or compatibility corrections, and necessary code-signing changes remain possible. Future development may be reconsidered in 2027.
+
 ### What's new
 
 - **Black theme** with a one-click **Black theme / Light theme** switch.
