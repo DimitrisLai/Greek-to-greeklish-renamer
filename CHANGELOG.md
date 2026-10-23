@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.5.0 (2026-10-23)
+- Add a Black theme alongside Light, switchable instantly from the app header.
+- Save the appearance preference locally; older settings default to Light without changing existing choices.
+- Recolor preview rows, checkboxes, input controls, History and Results dialogs while preserving filters, selected rows and current preview.
+- Add unit coverage for theme persistence and contrast mapping plus a real-Tk UI smoke test on Linux; rename/undo engine remains unchanged.
+- Update Windows file metadata, manual and release packages. Distribution remains unsigned pending separate signing approval.
+
 ## v2.4.0 (2026-10-22)
 - Persist the last valid folder and selected file-type preset/custom extensions in an atomic, local settings JSON; restore safely without auto-renaming.
 - Add read-only scan cancellation, active Close protection, and no partial previews or rename logs when cancelled.
