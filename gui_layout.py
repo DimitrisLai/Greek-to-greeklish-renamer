@@ -27,11 +27,12 @@ class WindowLayoutMixin:
     def _checkbox_icon(self, enabled: bool) -> tk.PhotoImage:
         """Draw a genuine checkbox graphic; Unicode checkbox glyphs vary by font."""
         icon = tk.PhotoImage(master=self.root, width=20, height=20)
-        background = WHITE
-        border = TEAL if enabled else '#8798A7'
+        black = getattr(self, 'appearance', 'Light') == 'Black'
+        background = '#151D29' if black else WHITE
+        border = ('#55D8C9' if enabled else '#99AABD') if black else (TEAL if enabled else '#8798A7')
         icon.put(background, to=(0, 0, 20, 20))
         icon.put(border, to=(2, 2, 18, 18))
-        icon.put(TEAL if enabled else WHITE, to=(4, 4, 16, 16))
+        icon.put(('#087F80' if black else TEAL) if enabled else background, to=(4, 4, 16, 16))
         if enabled:
             # Thick rasterized white check mark inside the filled square.
             for x, y in [(6, 10), (7, 11), (8, 12), (9, 13),
@@ -60,6 +61,8 @@ class WindowLayoutMixin:
                  fg='#A8C5D6', font=(FONT, 9)).place(x=34, y=65)
         tk.Label(top, text=f'v{VERSION}   •   BY DIMITRIS LAIDIS', bg=NAVY,
                  fg='#82CED0', font=(FONT, 9, 'bold')).place(relx=0.98, y=34, anchor='e')
+        self.theme_btn = self._button(top, 'Black theme', self._toggle_appearance, width=12)
+        self.theme_btn.place(relx=0.73, y=25, anchor='e')
 
         frame = tk.Frame(self.root, bg=PAPER, padx=28, pady=19)
         frame.pack(fill='both', expand=True)
