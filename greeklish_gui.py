@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Greek to Greeklish Renamer 2.4.0 — native Windows desktop UI.
+"""Greek to Greeklish Renamer 2.5.0 — native Windows desktop UI.
 
 Built with Python's standard-library Tkinter. No Tk calls occur on worker threads.
 The existing command-line renamer remains available separately.
